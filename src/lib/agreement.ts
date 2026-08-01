@@ -60,6 +60,32 @@ export type Sponsor = {
   logo?: string | undefined;
 };
 
+/** Placement, size and margin controls for sponsor marks. */
+export type SponsorLogoSettings = {
+  /** Logo height inside the sponsor strip, px. */
+  stripHeight: number;
+  /** Logo height for the small marks printed in the header/footer, px. */
+  markHeight: number;
+  fit: LogoFit;
+  align: LogoAlign;
+  /** Horizontal gap between sponsor items in the strip, px. */
+  gap: number;
+  /** Consistent margin applied around every sponsor mark, px. */
+  marginX: number;
+  marginY: number;
+  inHeader: boolean;
+  inFooter: boolean;
+  onCover: boolean;
+  inSignatures: boolean;
+  headerSide: "left" | "right";
+  footerSide: "left" | "right";
+  /** Max sponsor marks rendered in a header/footer row. */
+  maxMarks: number;
+  frame: boolean;
+  /** Eye-catching accent bar and tint behind sponsor marks. */
+  highlight: boolean;
+};
+
 export type CodeMarkSettings = {
   enabled: boolean;
   type: "qr" | "barcode";
@@ -94,7 +120,9 @@ export type DocSettings = {
   sponsors: Sponsor[];
   showSponsorStrip: boolean;
   sponsorHeading: string;
+  sponsorLogo: SponsorLogoSettings;
 };
+
 
 export type Agreement = {
   documentTitle: string;
