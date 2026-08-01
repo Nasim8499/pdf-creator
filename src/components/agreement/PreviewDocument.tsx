@@ -9,6 +9,8 @@ const PAD_BOTTOM = 56;
 const HEADER_H = 46;
 const FOOTER_H = 40;
 const CONTENT_H = PAGE_H - PAD_TOP - PAD_BOTTOM - HEADER_H - FOOTER_H;
+const CONTENT_PAD_TOP = 20;
+const PACK_H = CONTENT_H - CONTENT_PAD_TOP - 8;
 
 type Block = { id: string; node: ReactNode };
 
@@ -183,7 +185,7 @@ export function PreviewDocument({
     let current: number[] = [];
     let used = 0;
     heights.forEach((h, i) => {
-      if (current.length && used + h > CONTENT_H) {
+      if (current.length && used + h > PACK_H) {
         next.push(current);
         current = [];
         used = 0;
@@ -239,7 +241,7 @@ export function PreviewDocument({
               <span className="shrink-0">{agreement.employee.name}</span>
             </header>
 
-            <div style={{ height: CONTENT_H, overflow: "hidden" }} className="pt-5">
+            <div style={{ height: CONTENT_H, overflow: "hidden", paddingTop: CONTENT_PAD_TOP }}>
               {page.map((i) => (
                 <div key={blocks[i]?.id ?? i} style={{ display: "flow-root" }}>
                   {blocks[i]?.node}
