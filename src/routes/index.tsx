@@ -24,6 +24,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EditorPanel } from "@/components/agreement/EditorPanel";
 import { QuickFillPanel } from "@/components/agreement/QuickFillPanel";
 import { SettingsPanel } from "@/components/agreement/SettingsPanel";
+import { BrandingPanel } from "@/components/agreement/BrandingPanel";
+import { PdfPreviewDialog } from "@/components/agreement/PdfPreviewDialog";
 import { DraftsPanel } from "@/components/agreement/DraftsPanel";
 import { ExportConfirmDialog } from "@/components/agreement/ExportConfirmDialog";
 import {
@@ -92,6 +94,7 @@ function AgreementEditorPage() {
   const [draftSavedAt, setDraftSavedAt] = useState<string | null>(null);
   const [printTarget, setPrintTarget] = useState<Agreement | null>(null);
   const [exportOpen, setExportOpen] = useState(false);
+  const [pdfPreview, setPdfPreview] = useState<{ doc: Agreement; label?: string } | null>(null);
   const [textScale, setTextScale] = useState<"base" | "large" | "xlarge">("base");
 
 
@@ -246,6 +249,11 @@ function AgreementEditorPage() {
     }, 250);
   };
 
+  /** Opens the in-app PDF preview so formatting can be checked before saving. */
+  const previewPdf = (doc: Agreement, fileLabel?: string) => {
+    setPdfPreview({ doc, ...(fileLabel ? { label: fileLabel } : {}) });
+  };
+
   /** Builds and downloads a genuine PDF file, no print dialog. */
   const savePdfFile = async (doc: Agreement, fileLabel?: string) => {
     const id = toast.loading("Building PDF file…");
@@ -389,7 +397,7 @@ function AgreementEditorPage() {
               setAgreement(clone(d.data));
               toast.success("Draft opened", { description: d.label });
             }}
-            onExport={(d) => savePdfFile(d.data, d.label)}
+            onExport={(d) => previewPdf(d.data, d.label)}
             onRename={(id, label) =>
               setDrafts((prev) => {
                 const next = renameDraft(prev, id, label);
@@ -413,6 +421,7 @@ function AgreementEditorPage() {
         </TabsContent>
 
         <TabsContent value="design" className="mt-5 space-y-8">
+          <BrandingPanel value={agreement} onChange={update} />
           <CompliancePanel findings={findings} />
           <ComplianceRulesPanel
             agreement={agreement}
@@ -645,6 +654,15 @@ function AgreementEditorPage() {
         </Button>
       </div>
 
+      <PdfPreviewDialog
+        open={pdfPreview !== null}
+        onOpenChange={(open) => {
+          if (!open) setPdfPreview(null);
+        }}
+        agreement={pdfPreview?.doc ?? null}
+        label={pdfPreview?.label}
+      />
+
       <ExportConfirmDialog
         open={exportOpen}
         onOpenChange={setExportOpen}
@@ -654,7 +672,7 @@ function AgreementEditorPage() {
         onConfirm={() => {
           confirmAllRules();
           setExportOpen(false);
-          void savePdfFile(agreement);
+          previewPdf(agreement);
         }}
       />
     </main>

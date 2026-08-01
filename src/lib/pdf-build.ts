@@ -1,14 +1,20 @@
 import {
   PDFDocument,
+  PDFHexString,
+  PDFName,
+  PDFNull,
+  PDFNumber,
   StandardFonts,
   rgb,
   type PDFFont,
   type PDFPage,
+  type PDFRef,
   type RGB,
 } from "pdf-lib";
 import type { Agreement } from "./agreement";
 import { formatDate } from "./agreement";
 import { docThemes } from "./doc-theme";
+
 
 /* ------------------------------------------------------------------ */
 /* Helpers                                                             */
@@ -638,6 +644,48 @@ function drawCover(page: PDFPage, a: Agreement, fonts: Fonts, pal: Palette) {
     page.drawText(val, { x: cx + 10, y: cy - 36, size: 11, font: fonts.serifBold, color: pal.ink });
   });
 
+  /* At a glance — key terms, so the cover carries real information */
+  let gy = y - 2 * 62 - 14;
+  page.drawText("AT A GLANCE", {
+    x,
+    y: gy,
+    size: 7.5,
+    font: fonts.sansBold,
+    color: pal.accent,
+  });
+  page.drawRectangle({ x, y: gy - 8, width: CONTENT_W - 22, height: 0.8, color: pal.rule });
+  gy -= 24;
+  const ref = a.references?.[0];
+  const glance: Array<[string, string]> = [
+    ["Position", a.employee.position || "As recorded in Schedule 1"],
+    ["Agreement type", a.headerText || a.documentTitle],
+    ["Employer contact", a.employer.contact || "-"],
+    ["Employee contact", a.employee.contact || "-"],
+    ["Term", a.endDate ? `${formatDate(a.startDate)} to ${formatDate(a.endDate)}` : "Ongoing, from commencement"],
+    ...(ref ? ([[ref.label || "Reference", ref.value || "-"]] as Array<[string, string]>) : []),
+  ];
+  for (const [k, v] of glance) {
+    if (gy < 170) break;
+    page.drawText(ascii(k).toUpperCase(), {
+      x,
+      y: gy,
+      size: 7,
+      font: fonts.sansBold,
+      color: pal.muted,
+    });
+    const val = wrap(v, fonts.serif, 9.5, CONTENT_W - 180)[0] ?? "-";
+    page.drawText(val, { x: x + 130, y: gy, size: 9.5, font: fonts.serif, color: pal.ink });
+    page.drawRectangle({
+      x,
+      y: gy - 7,
+      width: CONTENT_W - 22,
+      height: 0.4,
+      color: pal.rule,
+    });
+    gy -= 20;
+  }
+
+
   /* Footer notice */
   const notice = wrap(a.noticeText, fonts.sans, 7.6, CONTENT_W - 40).slice(0, 4);
   let ny = 132;
@@ -721,7 +769,16 @@ export async function buildAgreementPdf(agreement: Agreement): Promise<Uint8Arra
   const doc = await PDFDocument.create();
   doc.setTitle(agreement.documentTitle);
   doc.setSubject(agreement.subtitle);
+  doc.setAuthor(agreement.employer.legalName || agreement.employer.name || "Employer");
+  doc.setCreator("Employment Agreement Builder");
   doc.setProducer("Employment Agreement Builder");
+  doc.setKeywords([
+    "employment agreement",
+    "New Zealand",
+    agreement.employer.name || "",
+    agreement.employee.name || "",
+  ].filter(Boolean));
+  doc.setLanguage("en-NZ");
   doc.setCreationDate(new Date());
   const fonts = await loadFonts(doc);
 
@@ -750,8 +807,61 @@ export async function buildAgreementPdf(agreement: Agreement): Promise<Uint8Arra
     });
   });
 
+  // Navigable heading outline (bookmarks) so screen readers and PDF viewers can
+  // jump between sections instead of scrolling blind.
+  addOutline(doc, [
+    { title: "Cover", pageIndex: 0 },
+    { title: "Table of contents", pageIndex: 1 },
+    ...writer.toc.map((t) => ({ title: t.label, pageIndex: Math.max(0, t.page - 1) })),
+  ]);
+  doc.catalog.set(PDFName.of("PageMode"), PDFName.of("UseOutlines"));
+
   return doc.save();
 }
+
+/** Adds a flat PDF outline (bookmark) tree pointing at each heading's page. */
+function addOutline(doc: PDFDocument, items: Array<{ title: string; pageIndex: number }>) {
+  if (!items.length) return;
+  const context = doc.context;
+  const pages = doc.getPages();
+  const outlinesRef = context.nextRef();
+  const refs: PDFRef[] = items.map(() => context.nextRef());
+
+  items.forEach((item, i) => {
+    const page = pages[Math.min(item.pageIndex, pages.length - 1)];
+    if (!page) return;
+    const dict = context.obj({
+      Title: PDFHexString.fromText(item.title),
+      Parent: outlinesRef,
+      Dest: context.obj([
+        page.ref,
+        PDFName.of("XYZ"),
+        PDFNull,
+        PDFNumber.of(page.getHeight()),
+        PDFNull,
+      ]),
+    });
+    const prev = refs[i - 1];
+    const next = refs[i + 1];
+    if (prev) dict.set(PDFName.of("Prev"), prev);
+    if (next) dict.set(PDFName.of("Next"), next);
+    context.assign(refs[i]!, dict);
+  });
+
+  const first = refs[0]!;
+  const last = refs[refs.length - 1]!;
+  context.assign(
+    outlinesRef,
+    context.obj({
+      Type: PDFName.of("Outlines"),
+      First: first,
+      Last: last,
+      Count: PDFNumber.of(items.length),
+    }),
+  );
+  doc.catalog.set(PDFName.of("Outlines"), outlinesRef);
+}
+
 
 async function loadFonts(doc: PDFDocument): Promise<Fonts> {
   const [serif, serifBold, serifItalic, sans, sansBold] = await Promise.all([
