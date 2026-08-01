@@ -140,11 +140,32 @@ function AgreementEditorPage() {
     }
   }, []);
 
-
   useEffect(() => {
     if (!hydrated.current) return;
     saveStored(agreement, versions);
   }, [agreement, versions]);
+
+  // Hydrate the drafts list once.
+  useEffect(() => {
+    setDrafts(loadDrafts());
+  }, []);
+
+  const saveDraftNow = useCallback(() => {
+    setDrafts((prev) => {
+      const next = upsertAutoDraft(prev, agreement);
+      persistDrafts(next);
+      return next;
+    });
+    setDraftSavedAt(new Date().toISOString());
+  }, [agreement]);
+
+  // Autosave the Quick fill fields shortly after typing stops.
+  useEffect(() => {
+    if (!hydrated.current) return;
+    const t = window.setTimeout(() => saveDraftNow(), 1200);
+    return () => window.clearTimeout(t);
+  }, [agreement, saveDraftNow]);
+
 
   const update = useCallback((updater: (prev: Agreement) => Agreement) => {
     setAgreement((prev) => updater(prev));
