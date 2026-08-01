@@ -12,7 +12,7 @@ const CONTENT_H = PAGE_H - PAD_TOP - PAD_BOTTOM - HEADER_H - FOOTER_H;
 const CONTENT_PAD_TOP = 20;
 const PACK_H = CONTENT_H - CONTENT_PAD_TOP - 8;
 
-type Block = { id: string; node: ReactNode };
+type Block = { id: string; node: ReactNode; keepWithNext?: boolean };
 
 function Field({ label, value }: { label: string; value: string }) {
   return (
