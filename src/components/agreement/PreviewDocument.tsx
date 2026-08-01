@@ -387,11 +387,31 @@ export function PreviewDocument({
             }}
           >
             <header
-              className="flex items-end justify-between border-b border-neutral-300 pb-2 text-[10.5px] uppercase tracking-[0.16em] text-neutral-500"
+              className="flex items-center justify-between gap-4 border-b-2 border-neutral-900 pb-2"
               style={{ height: HEADER_H }}
             >
-              <span className="truncate">{agreement.headerText}</span>
-              <span className="shrink-0">{agreement.employee.name}</span>
+              <div className="flex min-w-0 items-center gap-2.5">
+                <Logo src={agreement.employer.logo} alt="Employer logo" h={24} />
+                <div className="min-w-0">
+                  <div className="truncate text-[10.5px] uppercase tracking-[0.16em] text-neutral-700">
+                    {agreement.headerText}
+                  </div>
+                  <div className="truncate text-[9px] uppercase tracking-[0.18em] text-neutral-400">
+                    {agreement.employer.name}
+                  </div>
+                </div>
+              </div>
+              <div className="flex shrink-0 items-center gap-2.5">
+                <div className="text-right">
+                  <div className="text-[9px] uppercase tracking-[0.18em] text-neutral-400">
+                    Employee
+                  </div>
+                  <div className="text-[10.5px] uppercase tracking-[0.14em] text-neutral-700">
+                    {agreement.employee.name}
+                  </div>
+                </div>
+                <Logo src={agreement.employee.logo} alt="Employee logo" h={24} />
+              </div>
             </header>
 
             <div style={{ height: CONTENT_H, overflow: "hidden", paddingTop: CONTENT_PAD_TOP }}>
@@ -403,13 +423,19 @@ export function PreviewDocument({
             </div>
 
             <footer
-              className="flex items-center justify-between border-t border-neutral-300 pt-2 text-[10px] text-neutral-500"
+              className="flex items-center justify-between gap-4 border-t-2 border-neutral-900 pt-2 text-[10px] text-neutral-500"
               style={{ height: FOOTER_H }}
             >
-              <span className="truncate pr-4">{agreement.footerText}</span>
-              <span className="shrink-0">
-                Page {pageIndex + 1} of {pages.length}
-              </span>
+              <div className="flex min-w-0 items-center gap-2">
+                <Logo src={agreement.employer.logo} alt="" h={14} />
+                <span className="truncate">{agreement.footerText}</span>
+              </div>
+              <div className="flex shrink-0 items-center gap-2">
+                <span className="tabular-nums uppercase tracking-[0.14em]">
+                  Page {pageIndex + 1} of {pages.length}
+                </span>
+                <Logo src={agreement.employee.logo} alt="" h={14} />
+              </div>
             </footer>
           </article>
         ))}
