@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Download, Loader2, RefreshCw } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Download, Loader2, RefreshCw, XCircle } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import type { Agreement } from "@/lib/agreement";
 import { pdfFileName } from "@/lib/pdf";
+import type { AuditResult, AuditSeverity } from "@/lib/pdf-audit";
 
 type Props = {
   open: boolean;
@@ -19,13 +20,26 @@ type Props = {
   label?: string | undefined;
 };
 
+const severityIcon: Record<AuditSeverity, typeof CheckCircle2> = {
+  error: XCircle,
+  warning: AlertTriangle,
+  pass: CheckCircle2,
+};
+
+const severityClass: Record<AuditSeverity, string> = {
+  error: "text-destructive",
+  warning: "text-amber-600 dark:text-amber-500",
+  pass: "text-emerald-600 dark:text-emerald-500",
+};
+
 /**
- * Builds the real PDF, shows it inline so formatting can be verified, and only
- * then downloads the file.
+ * Builds the real PDF, audits its accessibility (headings, outline, selectable
+ * text), shows both inline, and only then downloads the file.
  */
 export function PdfPreviewDialog({ open, onOpenChange, agreement, label }: Props) {
   const [url, setUrl] = useState<string | null>(null);
   const [pages, setPages] = useState<number | null>(null);
+  const [audit, setAudit] = useState<AuditResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [building, setBuilding] = useState(false);
   const [nonce, setNonce] = useState(0);
@@ -38,18 +52,21 @@ export function PdfPreviewDialog({ open, onOpenChange, agreement, label }: Props
     setError(null);
     setUrl(null);
     setPages(null);
+    setAudit(null);
 
     (async () => {
       try {
         const { buildAgreementPdf } = await import("@/lib/pdf-build");
-        const bytes = await buildAgreementPdf(agreement);
+        const { auditAgreementPdf } = await import("@/lib/pdf-audit");
+        const report = { headings: [], toc: [], pageCount: 0 };
+        const bytes = await buildAgreementPdf(agreement, report);
         if (cancelled) return;
         const blob = new Blob([bytes as BlobPart], { type: "application/pdf" });
         objectUrl = URL.createObjectURL(blob);
-        const { PDFDocument } = await import("pdf-lib");
-        const loaded = await PDFDocument.load(bytes);
+        const result = await auditAgreementPdf(bytes, report);
         if (cancelled) return;
-        setPages(loaded.getPageCount());
+        setPages(report.pageCount);
+        setAudit(result);
         setUrl(objectUrl);
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : "Could not build the PDF");
@@ -68,31 +85,91 @@ export function PdfPreviewDialog({ open, onOpenChange, agreement, label }: Props
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl">
+      <DialogContent className="max-w-5xl">
         <DialogHeader>
           <DialogTitle>Check the PDF before downloading</DialogTitle>
           <DialogDescription>
-            This is the exact file that will be saved. Scroll through the pages to verify the
-            formatting{pages ? ` — ${pages} pages` : ""}.
+            This is the exact file that will be saved. Scroll through the pages and review the
+            accessibility audit{pages ? ` — ${pages} pages` : ""}.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="h-[60vh] overflow-hidden rounded-md border border-border bg-muted/40">
-          {building ? (
-            <div
-              role="status"
-              aria-live="polite"
-              className="flex h-full items-center justify-center gap-2 text-sm text-muted-foreground"
-            >
-              <Loader2 className="size-4 animate-spin" aria-hidden="true" /> Building the PDF…
-            </div>
-          ) : error ? (
-            <div role="alert" className="flex h-full items-center justify-center p-6 text-sm text-destructive">
-              {error}
-            </div>
-          ) : url ? (
-            <iframe src={url} title={`PDF preview of ${fileName}`} className="size-full" />
-          ) : null}
+        <div className="grid gap-4 md:grid-cols-[1.6fr_1fr]">
+          <div className="h-[60vh] overflow-hidden rounded-md border border-border bg-muted/40">
+            {building ? (
+              <div
+                role="status"
+                aria-live="polite"
+                className="flex h-full items-center justify-center gap-2 text-sm text-muted-foreground"
+              >
+                <Loader2 className="size-4 animate-spin" aria-hidden="true" /> Building the PDF…
+              </div>
+            ) : error ? (
+              <div
+                role="alert"
+                className="flex h-full items-center justify-center p-6 text-sm text-destructive"
+              >
+                {error}
+              </div>
+            ) : url ? (
+              <iframe src={url} title={`PDF preview of ${fileName}`} className="size-full" />
+            ) : null}
+          </div>
+
+          <section
+            aria-labelledby="pdf-audit-heading"
+            className="flex h-[60vh] flex-col overflow-hidden rounded-md border border-border"
+          >
+            <header className="border-b border-border bg-muted/40 px-3 py-2">
+              <h3
+                id="pdf-audit-heading"
+                className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground"
+              >
+                Accessibility audit
+              </h3>
+              <p className="mt-1 text-[11px] text-muted-foreground" aria-live="polite">
+                {building
+                  ? "Checking headings, outline and selectable text…"
+                  : audit
+                    ? audit.errors > 0
+                      ? `${audit.errors} problem${audit.errors > 1 ? "s" : ""} found${audit.warnings ? `, ${audit.warnings} warning${audit.warnings > 1 ? "s" : ""}` : ""}.`
+                      : audit.warnings > 0
+                        ? `No blocking problems, ${audit.warnings} warning${audit.warnings > 1 ? "s" : ""}.`
+                        : "All checks passed."
+                    : "Waiting for the build."}
+              </p>
+            </header>
+
+            <ul className="flex-1 divide-y divide-border overflow-y-auto text-sm">
+              {audit?.issues.map((issue) => {
+                const Icon = severityIcon[issue.severity];
+                return (
+                  <li key={issue.id + issue.title} className="flex gap-2 px-3 py-2.5">
+                    <Icon
+                      className={`mt-0.5 size-4 shrink-0 ${severityClass[issue.severity]}`}
+                      aria-hidden="true"
+                    />
+                    <div>
+                      <p className="font-medium leading-snug">
+                        <span className="sr-only">{issue.severity}: </span>
+                        {issue.title}
+                      </p>
+                      <p className="mt-0.5 text-[12px] leading-snug text-muted-foreground">
+                        {issue.detail}
+                      </p>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+
+            {audit ? (
+              <footer className="border-t border-border px-3 py-2 text-[11px] text-muted-foreground">
+                {audit.stats.pages} pages · {audit.stats.headings} headings ·{" "}
+                {audit.stats.bookmarks} bookmarks · {audit.stats.textPages} pages with text
+              </footer>
+            ) : null}
+          </section>
         </div>
 
         <DialogFooter className="gap-2 sm:justify-between">
@@ -102,7 +179,7 @@ export function PdfPreviewDialog({ open, onOpenChange, agreement, label }: Props
             disabled={building}
             className="sm:mr-auto"
           >
-            <RefreshCw className="size-4" aria-hidden="true" /> Rebuild preview
+            <RefreshCw className="size-4" aria-hidden="true" /> Rebuild &amp; re-audit
           </Button>
           <div className="flex gap-2">
             <Button variant="ghost" onClick={() => onOpenChange(false)}>
@@ -120,7 +197,8 @@ export function PdfPreviewDialog({ open, onOpenChange, agreement, label }: Props
                 a.remove();
               }}
             >
-              <Download className="size-4" aria-hidden="true" /> Download PDF
+              <Download className="size-4" aria-hidden="true" />
+              {audit && audit.errors > 0 ? "Download anyway" : "Download PDF"}
             </Button>
           </div>
         </DialogFooter>

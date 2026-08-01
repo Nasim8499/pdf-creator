@@ -160,6 +160,8 @@ class Writer {
   pages: PDFPage[] = [];
   /** Heading -> printed page number, collected for the table of contents. */
   toc: Array<{ label: string; page: number }> = [];
+  /** Every heading with its level, used by the accessibility audit. */
+  outline: Array<{ level: 1 | 2; label: string; page: number }> = [];
   offset: number;
 
   constructor(doc: PDFDocument, fonts: Fonts, pal: Palette, agreement: Agreement, offset: number) {
@@ -277,6 +279,7 @@ class Writer {
   /** Section band, e.g. "PART B - TERMS OF EMPLOYMENT". */
   band(label: string) {
     this.need(48);
+    this.outline.push({ level: 1, label: ascii(label), page: this.pageNumber });
     this.space(10);
     this.page.drawRectangle({
       x: MX,
@@ -299,6 +302,7 @@ class Writer {
     if (opts.break && this.y < TOP - 40) this.newPage();
     this.need(46);
     if (opts.toc !== false) this.toc.push({ label: ascii(label), page: this.pageNumber });
+    this.outline.push({ level: 2, label: ascii(label), page: this.pageNumber });
     this.page.drawRectangle({
       x: MX,
       y: this.y - 15,
@@ -744,7 +748,18 @@ function drawContents(
 /* ------------------------------------------------------------------ */
 
 /** Builds a real, vector PDF of the whole agreement and returns its bytes. */
-export async function buildAgreementPdf(agreement: Agreement): Promise<Uint8Array> {
+export type BuildReport = {
+  /** Every heading in reading order, with its level and printed page number. */
+  headings: Array<{ level: 1 | 2; label: string; page: number }>;
+  /** Entries written into the table of contents. */
+  toc: Array<{ label: string; page: number }>;
+  pageCount: number;
+};
+
+export async function buildAgreementPdf(
+  agreement: Agreement,
+  report?: BuildReport,
+): Promise<Uint8Array> {
   const theme = docThemes[agreement.settings.theme] ?? docThemes["nz-official"];
   const pal: Palette = {
     ink: hexToRgb(theme.ink),
@@ -815,6 +830,12 @@ export async function buildAgreementPdf(agreement: Agreement): Promise<Uint8Arra
     ...writer.toc.map((t) => ({ title: t.label, pageIndex: Math.max(0, t.page - 1) })),
   ]);
   doc.catalog.set(PDFName.of("PageMode"), PDFName.of("UseOutlines"));
+
+  if (report) {
+    report.headings = writer.outline;
+    report.toc = writer.toc;
+    report.pageCount = all.length;
+  }
 
   return doc.save();
 }
