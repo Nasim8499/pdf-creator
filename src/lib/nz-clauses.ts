@@ -612,5 +612,133 @@ export const nzClauses: Clause[] = [
         "A signed copy of this Agreement will be retained by each party.",
       ),
   },
+  {
+    id: cid(),
+    heading: "Schedule 6 — Health and Safety Responsibilities Matrix",
+    html:
+      p(
+        "This schedule summarises how health and safety responsibilities are shared. It supports, and does not replace, the duties in the Health and Safety at Work Act 2015.",
+      ) +
+      ul(
+        "Employer: identify hazards, assess risks, and eliminate or minimise them so far as is reasonably practicable.",
+        "Employer: provide induction, task-specific training and refresher training, and keep records of it.",
+        "Employer: consult, cooperate and coordinate with other duty holders sharing the workplace.",
+        "Employer: investigate incidents, record outcomes and notify WorkSafe New Zealand of notifiable events.",
+        "Employee: follow safe work procedures and use controls and equipment as trained.",
+        "Employee: report hazards, incidents, near misses and injuries as soon as practicable.",
+        "Employee: participate in worker engagement forums and health and safety representative processes.",
+        "Both: review risk assessments after any incident, change of process, or introduction of new equipment.",
+      ),
+  },
+  {
+    id: cid(),
+    heading: "Schedule 7 — Pay Cycle and Payslip Information",
+    html:
+      p(
+        "Each payslip issued to the Employee will contain the information set out below, so that the Employee can check that they have been paid correctly for every hour worked.",
+      ) +
+      ul(
+        "Pay period start and end dates, and the payment date.",
+        "Total hours worked in the period, separated into ordinary hours and any additional hours.",
+        "The rate or rates applied to those hours, including any penal rate or loading.",
+        "Any allowances, reimbursements or bonuses paid.",
+        "Leave taken in the period and the rate at which it was paid.",
+        "Current leave balances, including annual holidays, sick leave and alternative holidays.",
+        "Gross pay, each deduction shown separately, and net pay.",
+        "Employer KiwiSaver contributions and employee contributions.",
+      ) +
+      p(
+        "If the Employee believes a payslip is incorrect, they should raise it with their manager or the payroll contact as soon as possible. Any confirmed underpayment will be corrected in the next pay run, or sooner where the shortfall is significant.",
+      ),
+  },
+  {
+    id: cid(),
+    heading: "Schedule 8 — Induction and First Ninety Days",
+    html:
+      p(
+        "The Employer will provide a structured induction so that the Employee understands their role, the workplace, and how to raise concerns.",
+      ) +
+      ol(
+        "Day one: workplace tour, emergency procedures, first aid and evacuation points, introduction to the team.",
+        "Week one: role expectations, systems access, timekeeping, and the policies in Schedule 2.",
+        "Week two to four: task-specific training and supervised practice, with feedback recorded.",
+        "Month two: check-in on progress, workload and wellbeing, and any additional training needs.",
+        "Month three: formal review of expectations, confirmation of understanding of key terms, and agreement on development goals.",
+      ) +
+      p(
+        "The Employee is encouraged to ask questions at any stage. No question about safety, pay or entitlements is unwelcome, and asking will never count against the Employee.",
+      ),
+  },
+  {
+    id: cid(),
+    heading: "Schedule 9 — Data, Devices and Return of Property Checklist",
+    html:
+      p(
+        "On the last day of employment, or earlier on request, the Employee will return the following and confirm that no copies of the Employer's information have been retained.",
+      ) +
+      ul(
+        "Access cards, keys, fobs and any security credentials.",
+        "Laptops, phones, tablets, chargers, and any peripheral equipment.",
+        "Tools, uniforms, protective clothing and branded items.",
+        "Client files, records, notebooks and printed material.",
+        "Vehicle, fuel card and associated documentation.",
+        "Any credentials for third-party systems used on the Employer's behalf.",
+      ) +
+      p(
+        "The Employer will confirm receipt in writing. Final pay will not be withheld pending return of property; any dispute about property will be dealt with separately and in good faith.",
+      ),
+  },
+  {
+    id: cid(),
+    heading: "Schedule 10 — Glossary of Common Payroll Terms",
+    html:
+      p(
+        "These plain-language explanations are provided so that the Employee can understand the terms used on their payslip and in this Agreement.",
+      ) +
+      ul(
+        "<b>Ordinary weekly pay</b>: what the Employee is normally paid in a week, used to calculate annual holidays.",
+        "<b>Average weekly earnings</b>: gross earnings over the last twelve months divided by fifty-two.",
+        "<b>Relevant daily pay</b>: what the Employee would have earned on the specific day, used for public holidays and sick or bereavement leave.",
+        "<b>Average daily pay</b>: used where daily pay varies or is not reasonably determinable.",
+        "<b>Gross earnings</b>: all payments the Employee is entitled to under this Agreement before deductions.",
+        "<b>Alternative holiday</b>: a paid day off earned by working a public holiday that was an otherwise working day.",
+        "<b>Entitlement date</b>: the anniversary of the Employee's start date, when a new annual holidays entitlement arises.",
+      ),
+  },
+  {
+    id: cid(),
+    heading: "Schedule 11 — Communication, Feedback and Review Cycle",
+    html:
+      p(
+        "Regular, documented communication helps both parties meet their good faith obligations and avoids problems escalating.",
+      ) +
+      ul(
+        "Weekly: short check-in between the Employee and their manager on workload, priorities and any blockers.",
+        "Monthly: review of hours worked, leave balances and any health and safety matters raised.",
+        "Six-monthly: structured performance and development conversation, recorded in writing.",
+        "Annually: remuneration review, review of the position description, and review of the terms in Schedule 1.",
+      ) +
+      p(
+        "Either party may request an additional meeting at any time. Where a meeting may affect the Employee's employment, the Employee will be told the purpose in advance and given the opportunity to bring a representative or support person.",
+      ),
+  },
+  {
+    id: cid(),
+    heading: "Schedule 12 — Record of Variations",
+    html:
+      p(
+        "Every variation to this Agreement will be recorded below, signed or otherwise confirmed in writing by both parties, and attached to the signed original held by each party.",
+      ) +
+      ul(
+        "Date of variation.",
+        "Clause or schedule varied.",
+        "Description of the change agreed.",
+        "Effective date of the change.",
+        "Confirmation that the Employee had an opportunity to seek advice before agreeing.",
+        "Signature or written confirmation of each party.",
+      ) +
+      p(
+        "Where no variations have been recorded, this Agreement applies as originally signed. A variation does not affect any other term of this Agreement, and does not restart the Employee's period of continuous service.",
+      ),
+  },
 ];
-
