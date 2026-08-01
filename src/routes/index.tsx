@@ -499,6 +499,18 @@ function AgreementEditorPage() {
               </Button>
             </div>
             <Button
+              size="icon"
+              variant="outline"
+              aria-label={`Text size: ${textScale}. Tap to change`}
+              title="Change text size"
+              className="size-11 sm:size-9"
+              onClick={() =>
+                setTextScale((s) => (s === "base" ? "large" : s === "large" ? "xlarge" : "base"))
+              }
+            >
+              <ALargeSmall className="size-4" />
+            </Button>
+            <Button
               variant="outline"
               className="hidden sm:inline-flex"
               onClick={() => setAgreement(clone(defaultAgreement))}
@@ -509,12 +521,12 @@ function AgreementEditorPage() {
               size="icon"
               variant="outline"
               aria-label="Reset document"
-              className="sm:hidden"
+              className="size-11 sm:hidden"
               onClick={() => setAgreement(clone(defaultAgreement))}
             >
               <RotateCcw className="size-4" />
             </Button>
-            <Button className="hidden lg:inline-flex" onClick={() => print(agreement)}>
+            <Button className="hidden lg:inline-flex" onClick={() => setExportOpen(true)}>
               <FileDown className="size-4" /> Export PDF
             </Button>
 
@@ -523,7 +535,11 @@ function AgreementEditorPage() {
       </header>
 
       {/* Mobile: switch between editing and the paginated preview */}
-      <div className="no-print sticky top-[57px] z-20 grid grid-cols-2 border-b border-border bg-background lg:hidden">
+      <div
+        role="tablist"
+        aria-label="Editor and preview"
+        className="no-print sticky top-[57px] z-20 grid grid-cols-2 border-b border-border bg-background lg:hidden"
+      >
         {[
           { id: "edit", label: "Edit", Icon: PencilLine },
           { id: "preview", label: "Preview", Icon: FileText },
@@ -531,17 +547,21 @@ function AgreementEditorPage() {
           <button
             key={id}
             type="button"
+            role="tab"
+            aria-selected={mobileTab === id}
+            aria-controls={id === "edit" ? "editor-panel" : "preview-panel"}
             onClick={() => setMobileTab(id)}
-            className={`flex items-center justify-center gap-1.5 py-2.5 text-sm font-medium transition-colors ${
+            className={`flex min-h-11 items-center justify-center gap-1.5 py-2.5 text-sm font-medium transition-colors ${
               mobileTab === id
                 ? "border-b-2 border-primary text-foreground"
                 : "text-muted-foreground"
             }`}
           >
-            <Icon className="size-4" /> {label}
+            <Icon className="size-4" aria-hidden="true" /> {label}
           </button>
         ))}
       </div>
+
 
       <div className="lg:grid lg:grid-cols-[minmax(0,440px)_minmax(0,1fr)]">
         <section
