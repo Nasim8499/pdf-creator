@@ -475,7 +475,6 @@ export function SettingsPanel({ value, onChange }: Props) {
             options={[
               { value: "contain" as const, label: "Contain" },
               { value: "cover" as const, label: "Cover" },
-              { value: "fill" as const, label: "Stretch" },
             ]}
             onChange={(fit) => setSponsor({ fit })}
           />
