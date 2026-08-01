@@ -374,7 +374,68 @@ function PartyCard({ title, p, t, s }: { title: string; p: Party; t: DocTheme; s
   );
 }
 
+/** Short label chip printed on the cover, derived from the chosen template. */
+function coverBadge(a: Agreement) {
+  const badges: Record<string, string> = {
+    individual: "Permanent employment",
+    contractor: "Contract for services",
+    casual: "Casual · no guaranteed hours",
+    "fixed-term": "Fixed term",
+  };
+  return badges[a.templateId ?? "individual"] ?? "Private agreement";
+}
+
+/** Full-page divider that opens each Part of the document. */
+function PartDivider({
+  index,
+  title,
+  blurb,
+  t,
+}: {
+  index: string;
+  title: string;
+  blurb: string;
+  t: DocTheme;
+}) {
+  return (
+    <div
+      className="relative flex flex-col justify-center overflow-hidden px-10"
+      style={{ minHeight: 720, background: t.surface, border: `1px solid ${t.chromeRule}` }}
+    >
+      <div className="absolute left-0 top-0" style={{ width: 10, height: "100%", background: t.ink }} />
+      <div
+        className="absolute right-0 top-0 opacity-[0.06]"
+        style={{
+          fontSize: 320,
+          lineHeight: 0.8,
+          color: t.ink,
+          fontWeight: 700,
+          transform: "translate(12%, -6%)",
+        }}
+      >
+        {index.replace(/[^A-Za-z0-9]/g, "").slice(-1)}
+      </div>
+      <div className="relative">
+        <div className="text-[11px] font-semibold uppercase tracking-[0.34em]" style={{ color: t.accent }}>
+          {index}
+        </div>
+        <h2
+          className={`${t.headingClass} mt-3 text-[34px] font-semibold leading-tight`}
+          style={{ color: t.ink }}
+        >
+          {title}
+        </h2>
+        <div className="mt-4 h-[3px] w-24" style={{ background: t.accent }} />
+        <p className="mt-4 max-w-[70%] text-[12.5px] leading-relaxed" style={{ color: t.muted }}>
+          {blurb}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 function buildBlocks(ctx: Ctx): Block[] {
+
   const { a, s, t } = ctx;
   const blocks: Block[] = [];
   const brk = s.strictBreaks;
