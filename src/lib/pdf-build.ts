@@ -1,14 +1,20 @@
 import {
   PDFDocument,
+  PDFHexString,
+  PDFName,
+  PDFNull,
+  PDFNumber,
   StandardFonts,
   rgb,
   type PDFFont,
   type PDFPage,
+  type PDFRef,
   type RGB,
 } from "pdf-lib";
 import type { Agreement } from "./agreement";
 import { formatDate } from "./agreement";
 import { docThemes } from "./doc-theme";
+
 
 /* ------------------------------------------------------------------ */
 /* Helpers                                                             */
