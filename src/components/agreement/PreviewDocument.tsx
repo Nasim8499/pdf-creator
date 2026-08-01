@@ -200,7 +200,6 @@ export function PreviewDocument({
       used += h;
     });
     if (current.length) next.push(current);
-    (window as any).__pages = next.map((pp) => pp.map((i) => blocks[i]?.id));
     setPages(next.length ? next : [[]]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [signature]);
