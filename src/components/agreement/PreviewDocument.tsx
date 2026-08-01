@@ -784,6 +784,9 @@ export function PreviewDocument({
                 style={{ height: HEADER_H, borderBottom: `2px solid ${t.chromeRule}` }}
               >
                 <div className="flex min-w-0 items-center gap-2.5">
+                  {sponsorsOn && sl.inHeader && sl.headerSide === "left" ? (
+                    <SponsorMarks a={agreement} t={t} sl={sl} />
+                  ) : null}
                   {s.logo.showInHeader ? (
                     <Logo
                       src={agreement.employer.logo}
@@ -825,6 +828,9 @@ export function PreviewDocument({
                       {agreement.employee.name}
                     </div>
                   </div>
+                  {sponsorsOn && sl.inHeader && sl.headerSide === "right" ? (
+                    <SponsorMarks a={agreement} t={t} sl={sl} />
+                  ) : null}
                   {s.logo.showInHeader ? (
                     <Logo
                       src={agreement.employee.logo}
@@ -851,6 +857,9 @@ export function PreviewDocument({
                 style={{ height: FOOTER_H, borderTop: `2px solid ${t.chromeRule}`, color: t.muted }}
               >
                 <div className="flex min-w-0 items-center gap-2">
+                  {sponsorsOn && sl.inFooter && sl.footerSide === "left" ? (
+                    <SponsorMarks a={agreement} t={t} sl={sl} />
+                  ) : null}
                   {s.logo.showInFooter ? (
                     <Logo src={agreement.employer.logo} alt="" h={s.logo.footerHeight} s={s.logo} />
                   ) : null}
@@ -861,6 +870,9 @@ export function PreviewDocument({
                     <span className="tabular-nums uppercase tracking-[0.14em]">
                       Page {pageIndex + 1} of {pages.length}
                     </span>
+                  ) : null}
+                  {sponsorsOn && sl.inFooter && sl.footerSide === "right" ? (
+                    <SponsorMarks a={agreement} t={t} sl={sl} />
                   ) : null}
                   {s.logo.showInFooter ? (
                     <Logo src={agreement.employee.logo} alt="" h={s.logo.footerHeight} s={s.logo} />
