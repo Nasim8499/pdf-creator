@@ -150,12 +150,12 @@ function buildBlocks(a: Agreement): Block[] {
     blocks.push({
       id: c.id,
       node: (
-        <section className="mb-6">
+        <section className="mb-5">
           <h2 className="doc-serif mb-2 text-[15.5px] font-semibold text-neutral-900">
             {c.heading}
           </h2>
           <div
-            className="doc-prose text-[13px] leading-[1.85] text-neutral-800"
+            className="doc-prose text-[13px] leading-[1.78] text-neutral-800"
             dangerouslySetInnerHTML={{ __html: c.html }}
           />
         </section>
