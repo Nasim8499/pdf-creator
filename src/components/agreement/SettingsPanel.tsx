@@ -13,6 +13,7 @@ import {
   type CodeMarkSettings,
   type DocSettings,
   type LogoSettings,
+  type SponsorLogoSettings,
 } from "@/lib/agreement";
 
 type Props = {
