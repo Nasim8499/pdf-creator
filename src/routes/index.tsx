@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { EditorPanel } from "@/components/agreement/EditorPanel";
 import { PreviewDocument } from "@/components/agreement/PreviewDocument";
+import { VersionDiffDialog } from "@/components/agreement/VersionDiffDialog";
 import {
   clone,
   defaultAgreement,
@@ -146,6 +147,9 @@ function AgreementEditorPage() {
                     <Save className="size-4" /> Save
                   </Button>
                 </div>
+                {versions.length > 0 && (
+                  <VersionDiffDialog current={agreement} versions={versions} onExport={print} />
+                )}
                 {versions.length === 0 ? (
                   <p className="text-xs text-muted-foreground">
                     No saved versions yet. Save a snapshot to restore or export it later.
