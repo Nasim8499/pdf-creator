@@ -316,9 +316,27 @@ function AgreementEditorPage() {
             <Settings2 className="size-3.5" /> Design
           </TabsTrigger>
         </TabsList>
-        <TabsContent value="quick" className="mt-5">
+        <TabsContent value="quick" className="mt-5 space-y-6">
           <QuickFillPanel value={agreement} onChange={update} />
+          <DraftsPanel
+            drafts={drafts}
+            savedAt={draftSavedAt}
+            onSaveNow={saveDraftNow}
+            onOpen={(d) => {
+              setAgreement(clone(d.data));
+              toast.success("Draft opened", { description: d.label });
+            }}
+            onExport={(d) => print(d.data)}
+            onDelete={(id) =>
+              setDrafts((prev) => {
+                const next = prev.filter((x) => x.id !== id);
+                persistDrafts(next);
+                return next;
+              })
+            }
+          />
         </TabsContent>
+
         <TabsContent value="content" className="mt-5">
           <EditorPanel value={agreement} onChange={update} />
         </TabsContent>
