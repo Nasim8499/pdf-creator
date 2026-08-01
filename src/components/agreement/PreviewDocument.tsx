@@ -80,11 +80,11 @@ function buildBlocks(a: Agreement): Block[] {
         <h2 className="doc-serif mb-4 border-b border-neutral-300 pb-2 text-[19px] font-semibold text-neutral-900">
           Contents
         </h2>
-        <ol className="columns-2 gap-8 [column-fill:balance]">
+        <ol className="columns-3 gap-6 [column-fill:balance]">
           {a.clauses.map((c) => (
             <li
               key={c.id}
-              className="mb-[5px] break-inside-avoid text-[11.5px] leading-snug text-neutral-700"
+              className="mb-[5px] break-inside-avoid text-[10px] leading-snug text-neutral-700"
             >
               {c.heading}
             </li>
