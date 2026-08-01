@@ -247,7 +247,14 @@ function AgreementEditorPage() {
         <TabsContent value="content" className="mt-5">
           <EditorPanel value={agreement} onChange={update} />
         </TabsContent>
-        <TabsContent value="design" className="mt-5">
+        <TabsContent value="design" className="mt-5 space-y-8">
+          <LayoutAuditPanel
+            report={report}
+            hasBaseline={baseline !== null}
+            baselineAt={baselineAt ?? undefined}
+            onLock={lockBaseline}
+            onClear={clearBaseline}
+          />
           <SettingsPanel value={agreement} onChange={update} />
         </TabsContent>
       </Tabs>
