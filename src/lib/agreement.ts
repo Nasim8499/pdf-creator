@@ -127,7 +127,7 @@ export function formatDate(value: string) {
   if (!value) return "—";
   const d = new Date(value + "T00:00:00");
   if (Number.isNaN(d.getTime())) return value;
-  return d.toLocaleDateString(undefined, {
+  return d.toLocaleDateString("en-NZ", {
     day: "2-digit",
     month: "long",
     year: "numeric",
