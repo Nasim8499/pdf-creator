@@ -361,7 +361,10 @@ function AgreementEditorPage() {
           </TabsTrigger>
         </TabsList>
         <TabsContent value="quick" className="mt-5 space-y-6">
-          <QuickFillPanel value={agreement} onChange={update} />
+          <div id="quick-fill-form" role="group" aria-label="Quick fill fields" tabIndex={-1}>
+            <QuickFillPanel value={agreement} onChange={update} />
+          </div>
+
           <DraftsPanel
             drafts={drafts}
             savedAt={draftSavedAt}
