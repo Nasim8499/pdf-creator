@@ -31,3 +31,22 @@ export function printAsPdf(fileName: string, onDone?: () => void) {
   // Safari does not always fire afterprint.
   window.setTimeout(restore, 1500);
 }
+
+/**
+ * Generates a genuine PDF file (vector text, real pages) from the agreement
+ * data and downloads it — no browser print dialog involved.
+ */
+export async function downloadAgreementPdf(doc: Agreement, label?: string) {
+  if (typeof window === "undefined") return;
+  const { buildAgreementPdf } = await import("./pdf-build");
+  const bytes = await buildAgreementPdf(doc);
+  const blob = new Blob([bytes as BlobPart], { type: "application/pdf" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${pdfFileName(doc, label)}.pdf`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}

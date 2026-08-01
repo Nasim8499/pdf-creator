@@ -37,7 +37,7 @@ import { useThrottledValue } from "@/hooks/use-throttled-value";
 
 
 import { TemplatePicker } from "@/components/agreement/TemplatePicker";
-import { pdfFileName, printAsPdf } from "@/lib/pdf";
+import { downloadAgreementPdf, pdfFileName, printAsPdf } from "@/lib/pdf";
 import { PreviewDocument } from "@/components/agreement/PreviewDocument";
 import { VersionDiffDialog } from "@/components/agreement/VersionDiffDialog";
 import { LayoutAuditPanel } from "@/components/agreement/LayoutAuditPanel";
@@ -246,6 +246,20 @@ function AgreementEditorPage() {
     }, 250);
   };
 
+  /** Builds and downloads a genuine PDF file, no print dialog. */
+  const savePdfFile = async (doc: Agreement, fileLabel?: string) => {
+    const id = toast.loading("Building PDF file…");
+    try {
+      await downloadAgreementPdf(doc, fileLabel);
+      toast.success("PDF downloaded", { id, description: `${pdfFileName(doc, fileLabel)}.pdf` });
+    } catch (e) {
+      toast.error("Could not build the PDF", {
+        id,
+        description: e instanceof Error ? e.message : "Unknown error",
+      });
+    }
+  };
+
 
   const saveVersion = () => {
     const label =
@@ -330,8 +344,8 @@ function AgreementEditorPage() {
                   <Button
                     size="icon"
                     variant="ghost"
-                    aria-label={`Export ${v.label} to PDF`}
-                    onClick={() => print(v.data)}
+                    aria-label={`Download ${v.label} as a PDF file`}
+                    onClick={() => savePdfFile(v.data, v.label)}
                   >
                     <FileDown className="size-4" />
                   </Button>
@@ -375,7 +389,7 @@ function AgreementEditorPage() {
               setAgreement(clone(d.data));
               toast.success("Draft opened", { description: d.label });
             }}
-            onExport={(d) => print(d.data, false, d.label)}
+            onExport={(d) => savePdfFile(d.data, d.label)}
             onRename={(id, label) =>
               setDrafts((prev) => {
                 const next = renameDraft(prev, id, label);
@@ -640,7 +654,7 @@ function AgreementEditorPage() {
         onConfirm={() => {
           confirmAllRules();
           setExportOpen(false);
-          print(agreement, true);
+          void savePdfFile(agreement);
         }}
       />
     </main>
