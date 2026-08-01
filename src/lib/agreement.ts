@@ -35,6 +35,67 @@ export type Party = {
   logo?: string | undefined;
 };
 
+export type LogoFit = "contain" | "cover";
+export type LogoAlign = "left" | "center" | "right";
+
+export type LogoSettings = {
+  headerHeight: number;
+  footerHeight: number;
+  coverHeight: number;
+  fit: LogoFit;
+  align: LogoAlign;
+  offsetX: number;
+  offsetY: number;
+  showInHeader: boolean;
+  showInFooter: boolean;
+  showOnCover: boolean;
+  showInSignatures: boolean;
+  frame: boolean;
+};
+
+export type Sponsor = {
+  id: string;
+  name: string;
+  tagline: string;
+  logo?: string | undefined;
+};
+
+export type CodeMarkSettings = {
+  enabled: boolean;
+  type: "qr" | "barcode";
+  value: string;
+  caption: string;
+  onCover: boolean;
+  onEveryPage: boolean;
+  inSignatures: boolean;
+  size: number;
+};
+
+export type DocSettings = {
+  pageSize: PageSizeName;
+  marginX: number;
+  marginY: number;
+  showHeader: boolean;
+  showFooter: boolean;
+  showPageNumbers: boolean;
+  showCover: boolean;
+  showContents: boolean;
+  /** Space below a Part band, in px. */
+  sectionSpacing: number;
+  /** Space between clauses, in px. */
+  clauseSpacing: number;
+  /** Force each Part A–D band onto a fresh page. */
+  strictBreaks: boolean;
+  /** Show 01, 02 … numbers beside clause headings. */
+  numberClauses: boolean;
+  theme: ThemeName;
+  logo: LogoSettings;
+  codes: CodeMarkSettings;
+  sponsors: Sponsor[];
+  showSponsorStrip: boolean;
+  sponsorHeading: string;
+};
+
 export type Agreement = {
   documentTitle: string;
   subtitle: string;
@@ -48,7 +109,9 @@ export type Agreement = {
   clauses: Clause[];
   signatures: SignatureBlock[];
   consents: Consent[];
+  settings: DocSettings;
 };
+
 
 export type Version = {
   id: string;
