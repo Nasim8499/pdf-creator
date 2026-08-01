@@ -36,7 +36,7 @@ async function fileToScaledDataUrl(file: File): Promise<string> {
 
 type Props = {
   label: string;
-  value?: string;
+  value?: string | undefined;
   onChange: (dataUrl: string | undefined) => void;
 };
 

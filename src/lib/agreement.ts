@@ -30,7 +30,7 @@ export type Party = {
   contact: string;
   extra: string;
   /** Data URL of an uploaded logo, shown on the cover, page headers and footers. */
-  logo?: string;
+  logo?: string | undefined;
 };
 
 export type Agreement = {
