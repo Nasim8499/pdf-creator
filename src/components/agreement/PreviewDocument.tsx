@@ -130,28 +130,56 @@ function SectionBar({ index, title, t, gap }: { index: string; title: string; t:
 }
 
 function SponsorStrip({ a, t }: Ctx) {
-  const { sponsors, sponsorHeading } = a.settings;
+  const { sponsors, sponsorHeading, sponsorLogo: sl } = a.settings;
   if (!sponsors.length) return null;
   return (
     <div
       className="mb-5 overflow-hidden"
-      style={{ border: `1px solid ${t.chromeRule}`, background: t.surface }}
+      style={{ border: `1px solid ${sl.highlight ? t.accent : t.chromeRule}`, background: t.surface }}
     >
       <div
-        className="px-3 py-1 text-[9.5px] font-semibold uppercase tracking-[0.22em]"
+        className="flex items-center gap-2 px-3 py-1 text-[9.5px] font-semibold uppercase tracking-[0.22em]"
         style={{ background: t.bandBg, color: t.bandText }}
       >
+        {sl.highlight ? (
+          <span className="h-2.5 w-2.5 shrink-0" style={{ background: t.accent }} />
+        ) : null}
         {sponsorHeading || "Supported by"}
       </div>
-      <div className="flex flex-wrap items-center gap-x-6 gap-y-3 px-4 py-3">
+      <div
+        className={`flex flex-wrap items-center ${alignClass[sl.align]}`}
+        style={{
+          columnGap: sl.gap,
+          rowGap: Math.max(8, sl.marginY * 2),
+          paddingLeft: 12 + sl.marginX,
+          paddingRight: 12 + sl.marginX,
+          paddingTop: 10 + sl.marginY,
+          paddingBottom: 10 + sl.marginY,
+        }}
+      >
         {sponsors.map((sp) => (
           <div key={sp.id} className="flex items-center gap-2.5">
             {sp.logo ? (
-              <img src={sp.logo} alt={sp.name} className="h-8 w-auto object-contain" />
+              <img
+                src={sp.logo}
+                alt={sp.name}
+                className="w-auto"
+                style={{
+                  height: sl.stripHeight,
+                  maxWidth: sl.stripHeight * 5,
+                  objectFit: sl.fit,
+                  ...(sl.frame ? { border: `1px solid ${t.chromeRule}`, padding: 2 } : null),
+                }}
+              />
             ) : (
               <div
-                className="grid size-8 place-items-center text-[11px] font-bold"
-                style={{ background: t.bandBg, color: t.bandText }}
+                className="grid place-items-center text-[11px] font-bold"
+                style={{
+                  height: sl.stripHeight,
+                  width: sl.stripHeight,
+                  background: sl.highlight ? t.accent : t.bandBg,
+                  color: t.bandText,
+                }}
               >
                 {(sp.name || "?").slice(0, 1).toUpperCase()}
               </div>
@@ -173,6 +201,55 @@ function SponsorStrip({ a, t }: Ctx) {
   );
 }
 
+/** Compact sponsor row printed in every page header/footer. */
+function SponsorMarks({ a, t, sl }: { a: Agreement; t: DocTheme; sl: SponsorLogoSettings }) {
+  const sponsors = a.settings.sponsors.slice(0, Math.max(1, sl.maxMarks));
+  if (!sponsors.length) return null;
+  return (
+    <div
+      className="flex shrink-0 items-center"
+      style={{
+        gap: Math.max(6, sl.gap / 3),
+        marginLeft: sl.marginX,
+        marginRight: sl.marginX,
+        marginTop: sl.marginY,
+        marginBottom: sl.marginY,
+        paddingLeft: sl.highlight ? 6 : 0,
+        borderLeft: sl.highlight ? `2px solid ${t.accent}` : undefined,
+      }}
+    >
+      {sponsors.map((sp) =>
+        sp.logo ? (
+          <img
+            key={sp.id}
+            src={sp.logo}
+            alt={sp.name}
+            className="w-auto"
+            style={{
+              height: sl.markHeight,
+              maxWidth: sl.markHeight * 5,
+              objectFit: sl.fit,
+              ...(sl.frame ? { border: `1px solid ${t.chromeRule}` } : null),
+            }}
+          />
+        ) : (
+          <span
+            key={sp.id}
+            className="whitespace-nowrap px-1 text-[8px] font-semibold uppercase tracking-[0.14em]"
+            style={{
+              lineHeight: `${sl.markHeight}px`,
+              color: t.ink,
+              ...(sl.frame ? { border: `1px solid ${t.chromeRule}` } : null),
+            }}
+          >
+            {sp.name}
+          </span>
+        ),
+      )}
+    </div>
+  );
+}
+
 function VerifyMark({ t, s, inline }: { t: DocTheme; s: DocSettings; inline?: boolean }) {
   if (!s.codes.enabled || !s.codes.value.trim()) return null;
   return (
@@ -188,6 +265,7 @@ function VerifyMark({ t, s, inline }: { t: DocTheme; s: DocSettings; inline?: bo
         <div className="mt-0.5 break-all text-[9.5px] leading-snug" style={{ color: t.muted }}>
           {s.codes.value}
         </div>
+
         {s.codes.caption ? (
           <div className="mt-1 text-[9.5px] italic" style={{ color: t.muted }}>
             {s.codes.caption}
