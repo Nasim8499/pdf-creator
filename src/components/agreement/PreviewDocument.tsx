@@ -204,7 +204,9 @@ export function PreviewDocument({
         style={{ width: PAGE_W - PAD_X * 2, position: "absolute", left: -99999, top: 0 }}
       >
         {blocks.map((b) => (
-          <div key={b.id}>{b.node}</div>
+          <div key={b.id} style={{ display: "flow-root" }}>
+            {b.node}
+          </div>
         ))}
       </div>
 
@@ -239,7 +241,9 @@ export function PreviewDocument({
 
             <div style={{ height: CONTENT_H, overflow: "hidden" }} className="pt-5">
               {page.map((i) => (
-                <div key={blocks[i]?.id ?? i}>{blocks[i]?.node}</div>
+                <div key={blocks[i]?.id ?? i} style={{ display: "flow-root" }}>
+                  {blocks[i]?.node}
+                </div>
               ))}
             </div>
 
