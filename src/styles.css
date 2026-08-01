@@ -201,6 +201,9 @@
   }
   .doc-page {
     box-shadow: none !important;
+    width: 793px !important;
+    height: 1121px !important;
+    overflow: hidden !important;
     break-after: page;
     page-break-after: always;
   }
