@@ -250,18 +250,25 @@ function AgreementEditorPage() {
         )}
       </div>
 
-      <Tabs defaultValue="content">
+      <Tabs defaultValue="quick">
         <TabsList className="w-full">
+          <TabsTrigger value="quick" className="flex-1">
+            <Zap className="size-3.5" /> Quick fill
+          </TabsTrigger>
           <TabsTrigger value="content" className="flex-1">
             <PencilLine className="size-3.5" /> Content
           </TabsTrigger>
           <TabsTrigger value="design" className="flex-1">
-            <Settings2 className="size-3.5" /> Design &amp; export
+            <Settings2 className="size-3.5" /> Design
           </TabsTrigger>
         </TabsList>
+        <TabsContent value="quick" className="mt-5">
+          <QuickFillPanel value={agreement} onChange={update} />
+        </TabsContent>
         <TabsContent value="content" className="mt-5">
           <EditorPanel value={agreement} onChange={update} />
         </TabsContent>
+
         <TabsContent value="design" className="mt-5 space-y-8">
           <CompliancePanel findings={findings} />
           <LayoutAuditPanel
