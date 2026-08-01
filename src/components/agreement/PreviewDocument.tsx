@@ -72,8 +72,21 @@ function buildBlocks(a: Agreement): Block[] {
     id: "cover",
     node: (
       <div className="flex h-[880px] flex-col justify-between">
-        <div className="text-[10.5px] uppercase tracking-[0.22em] text-neutral-500">
-          New Zealand · Individual Employment Agreement
+        <div>
+          <div className="flex items-start justify-between gap-6 border-b-2 border-neutral-900 pb-4">
+            <LogoSlot src={a.employer.logo} alt="Employer logo" h={40} label="Employer logo" />
+            <div className="pt-1 text-right text-[9.5px] uppercase leading-relaxed tracking-[0.2em] text-neutral-500">
+              New Zealand
+              <br />
+              Individual Employment Agreement
+            </div>
+            <LogoSlot src={a.employee.logo} alt="Employee logo" h={40} label="Employee logo" />
+          </div>
+          <div className="mt-3 flex justify-between text-[9px] uppercase tracking-[0.18em] text-neutral-500">
+            <span>Part A · Parties &amp; Terms</span>
+            <span>Part B · Schedules</span>
+            <span>Part C · Signatures</span>
+          </div>
         </div>
         <div>
           <div className="mb-5 h-[3px] w-24 bg-neutral-900" />
@@ -85,28 +98,24 @@ function buildBlocks(a: Agreement): Block[] {
               {a.subtitle}
             </p>
           ) : null}
-          <div className="mt-10 grid grid-cols-2 gap-8 border-t border-neutral-300 pt-6">
-            <div>
-              <div className="text-[10px] uppercase tracking-[0.18em] text-neutral-500">Employer</div>
-              <div className="doc-serif mt-1 text-[16px] font-semibold">{a.employer.name || "—"}</div>
-            </div>
-            <div>
-              <div className="text-[10px] uppercase tracking-[0.18em] text-neutral-500">Employee</div>
-              <div className="doc-serif mt-1 text-[16px] font-semibold">{a.employee.name || "—"}</div>
-            </div>
-            <div>
-              <div className="text-[10px] uppercase tracking-[0.18em] text-neutral-500">Date of agreement</div>
-              <div className="doc-serif mt-1 text-[16px]">{formatDate(a.agreementDate)}</div>
-            </div>
-            <div>
-              <div className="text-[10px] uppercase tracking-[0.18em] text-neutral-500">Commencement</div>
-              <div className="doc-serif mt-1 text-[16px]">{formatDate(a.startDate)}</div>
-            </div>
+          <div className="mt-10 grid grid-cols-2 border-y border-neutral-300">
+            {[
+              { k: "Employer", v: a.employer.name || "—" },
+              { k: "Employee", v: a.employee.name || "—" },
+              { k: "Date of agreement", v: formatDate(a.agreementDate) },
+              { k: "Commencement", v: formatDate(a.startDate) },
+            ].map(({ k, v }) => (
+              <div key={k} className="border-b border-neutral-200 px-1 py-3 last:border-b-0 [&:nth-last-child(2)]:border-b-0">
+                <div className="text-[10px] uppercase tracking-[0.18em] text-neutral-500">{k}</div>
+                <div className="doc-serif mt-1 text-[16px] font-semibold">{v}</div>
+              </div>
+            ))}
           </div>
         </div>
-        <p className="text-[11px] leading-relaxed text-neutral-500">
+        <p className="border-t border-neutral-300 pt-3 text-[11px] leading-relaxed text-neutral-500">
           This document is a private agreement between the parties named above. It is not issued by,
-          and is not affiliated with, any government agency.
+          and is not affiliated with, any government agency. Minimum entitlements under New Zealand
+          employment law apply regardless of the terms recorded here.
         </p>
       </div>
     ),
