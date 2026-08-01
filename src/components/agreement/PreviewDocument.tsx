@@ -1,11 +1,27 @@
 import { useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
-import { formatDate, type Agreement, type DocSettings, type LogoSettings, type Party } from "@/lib/agreement";
+import {
+  formatDate,
+  type Agreement,
+  type DocSettings,
+  type LogoSettings,
+  type Party,
+  type SponsorLogoSettings,
+} from "@/lib/agreement";
 import { docThemes, pageSizes, type DocTheme } from "@/lib/doc-theme";
+import { buildReport, type AuditBlockMeta, type LayoutFingerprint, type LayoutReport } from "@/lib/layout-audit";
 import { CodeMark } from "./CodeMark";
 
-type Block = { id: string; node: ReactNode; keepWithNext?: boolean; breakBefore?: boolean };
+type Block = {
+  id: string;
+  node: ReactNode;
+  keepWithNext?: boolean;
+  breakBefore?: boolean;
+  kind?: AuditBlockMeta["kind"];
+  label?: string;
+};
 
 type Ctx = { a: Agreement; s: DocSettings; t: DocTheme };
+
 
 const alignClass: Record<LogoSettings["align"], string> = {
   left: "justify-start",
