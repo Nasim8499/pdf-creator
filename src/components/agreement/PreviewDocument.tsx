@@ -25,7 +25,7 @@ function Field({ label, value }: { label: string; value: string }) {
   );
 }
 
-function Logo({ src, alt, h }: { src?: string; alt: string; h: number }) {
+function Logo({ src, alt, h }: { src?: string | undefined; alt: string; h: number }) {
   if (!src) return null;
   return (
     <img
@@ -37,7 +37,7 @@ function Logo({ src, alt, h }: { src?: string; alt: string; h: number }) {
   );
 }
 
-function LogoSlot({ src, alt, h, label }: { src?: string; alt: string; h: number; label: string }) {
+function LogoSlot({ src, alt, h, label }: { src?: string | undefined; alt: string; h: number; label: string }) {
   return (
     <div
       className="flex items-center justify-center overflow-hidden border border-dashed border-neutral-300 px-2"
