@@ -12,6 +12,8 @@ import {
   PencilLine,
   FileText,
   Zap,
+  Loader2,
+  ALargeSmall,
 } from "lucide-react";
 
 import { toast } from "sonner";
@@ -23,7 +25,15 @@ import { EditorPanel } from "@/components/agreement/EditorPanel";
 import { QuickFillPanel } from "@/components/agreement/QuickFillPanel";
 import { SettingsPanel } from "@/components/agreement/SettingsPanel";
 import { DraftsPanel } from "@/components/agreement/DraftsPanel";
-import { loadDrafts, persistDrafts, upsertAutoDraft, type Draft } from "@/lib/drafts";
+import { ExportConfirmDialog } from "@/components/agreement/ExportConfirmDialog";
+import {
+  loadDrafts,
+  persistDrafts,
+  renameDraft,
+  upsertAutoDraft,
+  type Draft,
+} from "@/lib/drafts";
+import { useThrottledValue } from "@/hooks/use-throttled-value";
 
 
 import { PreviewDocument } from "@/components/agreement/PreviewDocument";
@@ -35,6 +45,7 @@ import { complianceRules } from "@/lib/compliance";
 import { applyInzMapping } from "@/lib/inz-mapping";
 import { scanAgreement } from "@/lib/compliance";
 import { errorCount, type LayoutFingerprint, type LayoutReport } from "@/lib/layout-audit";
+
 import {
   clone,
   defaultAgreement,
