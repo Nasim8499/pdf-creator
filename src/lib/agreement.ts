@@ -270,6 +270,7 @@ export const defaultSponsorLogo = defaultSettings.sponsorLogo;
 
 
 export const defaultAgreement: Agreement = {
+  templateId: "individual",
   settings: JSON.parse(JSON.stringify(defaultSettings)) as DocSettings,
 
 
@@ -387,6 +388,7 @@ export function withSettings(doc: Agreement): Agreement {
   const s = (doc.settings ?? {}) as Partial<DocSettings>;
   return {
     ...doc,
+    templateId: doc.templateId ?? "individual",
     noticeTitle: doc.noticeTitle ?? defaultAgreement.noticeTitle,
     noticeText: doc.noticeText ?? defaultAgreement.noticeText,
     references: doc.references ?? clone(defaultAgreement.references),
