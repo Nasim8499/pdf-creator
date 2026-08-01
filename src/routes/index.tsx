@@ -565,12 +565,15 @@ function AgreementEditorPage() {
 
       <div className="lg:grid lg:grid-cols-[minmax(0,440px)_minmax(0,1fr)]">
         <section
+          id="editor-panel"
+          aria-label="Agreement editor"
           className={`no-print border-border lg:border-r ${
             mobileTab === "preview" ? "hidden lg:block" : ""
           }`}
         >
           <ScrollArea className="lg:h-[calc(100vh-var(--app-header))]">{editorColumn}</ScrollArea>
         </section>
+
 
         <section
           className={`print-root print-keep bg-muted/50 ${
