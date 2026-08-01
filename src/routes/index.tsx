@@ -21,6 +21,8 @@ import { EditorPanel } from "@/components/agreement/EditorPanel";
 import { SettingsPanel } from "@/components/agreement/SettingsPanel";
 import { PreviewDocument } from "@/components/agreement/PreviewDocument";
 import { VersionDiffDialog } from "@/components/agreement/VersionDiffDialog";
+import { LayoutAuditPanel } from "@/components/agreement/LayoutAuditPanel";
+import { errorCount, type LayoutFingerprint, type LayoutReport } from "@/lib/layout-audit";
 import {
   clone,
   defaultAgreement,
@@ -61,6 +63,9 @@ function AgreementEditorPage() {
   const [zoom, setZoom] = useState(0.62);
   const [mobileTab, setMobileTab] = useState("edit");
   const [printTarget, setPrintTarget] = useState<Agreement | null>(null);
+  const [report, setReport] = useState<LayoutReport | null>(null);
+  const [baseline, setBaseline] = useState<LayoutFingerprint | null>(null);
+  const [baselineAt, setBaselineAt] = useState<string | null>(null);
   const hydrated = useRef(false);
 
   useEffect(() => {
@@ -72,7 +77,51 @@ function AgreementEditorPage() {
     // Fit the page width to small screens on first paint.
     const w = window.innerWidth;
     if (w < 1024) setZoom(Math.max(0.28, +(((w - 28) / 794) * 100).toFixed(0) / 100));
+    try {
+      const raw = window.localStorage.getItem("agreement-layout-baseline");
+      if (raw) {
+        const parsed = JSON.parse(raw) as { fingerprint: LayoutFingerprint; at: string };
+        setBaseline(parsed.fingerprint);
+        setBaselineAt(parsed.at);
+      }
+    } catch {
+      /* ignore */
+    }
     hydrated.current = true;
+  }, []);
+
+  const lockBaseline = useCallback(() => {
+    setReport((r) => {
+      if (!r) {
+        toast.error("Still measuring the layout — try again in a moment.");
+        return r;
+      }
+      const at = new Date().toISOString();
+      setBaseline(r.fingerprint);
+      setBaselineAt(at);
+      try {
+        window.localStorage.setItem(
+          "agreement-layout-baseline",
+          JSON.stringify({ fingerprint: r.fingerprint, at }),
+        );
+      } catch {
+        /* ignore */
+      }
+      toast.success("Layout baseline locked", {
+        description: `${r.pageCount} pages recorded. Future edits are checked against this.`,
+      });
+      return r;
+    });
+  }, []);
+
+  const clearBaseline = useCallback(() => {
+    setBaseline(null);
+    setBaselineAt(null);
+    try {
+      window.localStorage.removeItem("agreement-layout-baseline");
+    } catch {
+      /* ignore */
+    }
   }, []);
 
 
@@ -85,7 +134,17 @@ function AgreementEditorPage() {
     setAgreement((prev) => updater(prev));
   }, []);
 
-  const print = (doc: Agreement) => {
+  const print = (doc: Agreement, force = false) => {
+    if (!force && doc === agreement) {
+      const errs = errorCount(report);
+      if (errs > 0) {
+        toast.error(`Layout validation found ${errs} issue${errs === 1 ? "" : "s"}`, {
+          description: "Page numbering or spacing shifted. Review the layout checks before exporting.",
+          action: { label: "Export anyway", onClick: () => print(doc, true) },
+        });
+        return;
+      }
+    }
     setPrintTarget(doc);
     setTimeout(() => {
       window.print();
@@ -198,7 +257,11 @@ function AgreementEditorPage() {
   const previewColumn = (
     <div className="preview-scroll lg:h-[calc(100vh-var(--app-header))] lg:overflow-auto">
       <div className="preview-pad p-3 sm:p-6">
-        <PreviewDocument agreement={shown} zoom={zoom} />
+        <PreviewDocument
+          agreement={shown}
+          zoom={zoom}
+          {...(printTarget ? {} : { onAudit: setReport, baseline })}
+        />
       </div>
     </div>
   );
