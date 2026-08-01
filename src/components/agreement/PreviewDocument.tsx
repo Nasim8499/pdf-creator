@@ -440,6 +440,17 @@ function buildBlocks(ctx: Ctx): Block[] {
   const blocks: Block[] = [];
   const brk = s.strictBreaks;
 
+  const divider = (index: string, title: string, blurb: string) => {
+    if (!s.strictBreaks) return;
+    blocks.push({
+      id: `divider-${index}`,
+      kind: "band",
+      label: `${index} divider`,
+      breakBefore: true,
+      node: <PartDivider index={index} title={title} blurb={blurb} t={t} />,
+    });
+  };
+
   if (s.showCover) {
     blocks.push({
       id: "cover",
@@ -727,6 +738,8 @@ function buildBlocks(ctx: Ctx): Block[] {
   });
 
 
+  divider("Part A", "Parties to this agreement", "Who the parties are, the particulars each of them has supplied, the key dates, and the reference numbers used for filing.");
+
   blocks.push({
     id: "parties-bar",
     kind: "band",
@@ -845,6 +858,8 @@ function buildBlocks(ctx: Ctx): Block[] {
   });
 
 
+  divider("Part B", "Terms and conditions", "The substantive terms agreed between the parties, read together with every minimum entitlement that applies under New Zealand law.");
+
   blocks.push({
     id: "terms-bar",
     kind: "band",
@@ -885,6 +900,8 @@ function buildBlocks(ctx: Ctx): Block[] {
   });
 
   if (a.consents.length) {
+    divider("Part C", "Acknowledgements and consents", "Confirmations recorded by the parties at the time of signing, including advice, privacy and policy acknowledgements.");
+
     blocks.push({
       id: "consents-head",
       kind: "band",
@@ -923,6 +940,8 @@ function buildBlocks(ctx: Ctx): Block[] {
   }
 
   if (a.signatures.length) {
+    divider("Part D", "Execution and signatures", "Signature blocks for each party, with the verification mark and any sponsor recognition printed alongside.");
+
     blocks.push({
       id: "sign-head",
       kind: "band",
@@ -999,6 +1018,8 @@ function buildBlocks(ctx: Ctx): Block[] {
       { item: "Government-issued fields", status: "Excluded", note: "Client IDs, visa statuses, accreditation and verification portals are never printed" },
     ];
     const trail = a.auditTrail ?? [];
+
+    divider("Appendix", "Compliance audit trail", "An automatically generated record of what this export contains, and of any labelled input that was remapped or removed.");
 
     blocks.push({
       id: "appendix-bar",
