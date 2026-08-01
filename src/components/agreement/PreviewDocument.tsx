@@ -159,6 +159,12 @@ function buildBlocks(a: Agreement): Block[] {
   });
 
   blocks.push({
+    id: "parties-bar",
+    keepWithNext: true,
+    node: <SectionBar index="Part A" title="Parties to this agreement" />,
+  });
+
+  blocks.push({
     id: "parties",
     node: (
       <div className="mb-6 grid grid-cols-2 gap-5">
@@ -166,17 +172,22 @@ function buildBlocks(a: Agreement): Block[] {
           { title: "Employer", p: a.employer },
           { title: "Employee", p: a.employee },
         ].map(({ title, p }) => (
-          <div key={title} className="rounded-md border border-neutral-300 p-3">
-            <div className="mb-1.5 text-[10.5px] font-semibold uppercase tracking-[0.14em] text-neutral-900">
-              {title}
+          <div key={title} className="border border-neutral-300">
+            <div className="flex items-center justify-between gap-2 border-b border-neutral-300 bg-neutral-100 px-3 py-1.5">
+              <span className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-neutral-900">
+                {title}
+              </span>
+              <Logo src={p.logo} alt={`${title} logo`} h={20} />
             </div>
-            <div className="doc-serif text-[13.5px] font-semibold text-neutral-900">
-              {p.name || "—"}
-            </div>
-            <div className="mt-1 space-y-0.5 text-[11.5px] leading-snug text-neutral-600">
-              {p.address ? <div>{p.address}</div> : null}
-              {p.contact ? <div>{p.contact}</div> : null}
-              {p.extra ? <div>{p.extra}</div> : null}
+            <div className="p-3">
+              <div className="doc-serif text-[13.5px] font-semibold text-neutral-900">
+                {p.name || "—"}
+              </div>
+              <div className="mt-1 space-y-0.5 text-[11.5px] leading-snug text-neutral-600">
+                {p.address ? <div>{p.address}</div> : null}
+                {p.contact ? <div>{p.contact}</div> : null}
+                {p.extra ? <div>{p.extra}</div> : null}
+              </div>
             </div>
           </div>
         ))}
@@ -187,7 +198,7 @@ function buildBlocks(a: Agreement): Block[] {
   blocks.push({
     id: "dates",
     node: (
-      <div className="mb-6 rounded-md bg-neutral-100 px-4 py-3">
+      <div className="mb-6 border-y-2 border-neutral-900 bg-neutral-50 px-4 py-3">
         <Field label="Date of agreement" value={formatDate(a.agreementDate)} />
         <Field label="Commencement date" value={formatDate(a.startDate)} />
         {a.endDate ? <Field label="End date" value={formatDate(a.endDate)} /> : null}
@@ -195,13 +206,23 @@ function buildBlocks(a: Agreement): Block[] {
     ),
   });
 
-  a.clauses.forEach((c) => {
+  blocks.push({
+    id: "terms-bar",
+    keepWithNext: true,
+    breakBefore: true,
+    node: <SectionBar index="Part B" title="Terms and conditions of employment" />,
+  });
+
+  a.clauses.forEach((c, index) => {
     blocks.push({
       id: c.id,
       node: (
         <section className="mb-5">
-          <h2 className="doc-serif mb-2 text-[15.5px] font-semibold text-neutral-900">
-            {c.heading}
+          <h2 className="doc-serif mb-2 flex gap-2.5 border-b border-neutral-200 pb-1 text-[15.5px] font-semibold text-neutral-900">
+            <span className="shrink-0 tabular-nums text-neutral-500">
+              {String(index + 1).padStart(2, "0")}
+            </span>
+            <span>{c.heading}</span>
           </h2>
           <div
             className="doc-prose text-[13px] leading-[1.78] text-neutral-800"
