@@ -168,7 +168,8 @@ export const defaultSettings: DocSettings = {
 };
 
 export const defaultAgreement: Agreement = {
-  settings: clone0(defaultSettings),
+  settings: JSON.parse(JSON.stringify(defaultSettings)) as DocSettings,
+
 
   documentTitle: "Individual Employment Agreement",
   subtitle: "New Zealand format — neutral template, not an official or government-issued document",
