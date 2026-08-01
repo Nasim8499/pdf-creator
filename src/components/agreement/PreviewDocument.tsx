@@ -276,6 +276,75 @@ function VerifyMark({ t, s, inline }: { t: DocTheme; s: DocSettings; inline?: bo
   );
 }
 
+function ParticularsCard({
+  title,
+  p,
+  t,
+  s,
+  entity,
+}: {
+  title: string;
+  p: Party;
+  t: DocTheme;
+  s: DocSettings;
+  entity?: boolean;
+}) {
+  const rows: Array<[string, string]> = entity
+    ? [
+        ["Entity name", p.legalName || p.name],
+        ["Trading name", p.name],
+        ["NZBN / company no.", p.registration ?? ""],
+        ["Registered address", p.address],
+        ["Postal address", p.postalAddress ?? ""],
+        ["Contact", p.contact],
+        ["Website", p.website ?? ""],
+        ["Business activity", p.position ?? ""],
+        ["Additional detail", p.extra],
+      ]
+    : [
+        ["Full legal name", p.legalName || p.name],
+        ["Known as", p.name],
+        ["Residential address", p.address],
+        ["Postal address", p.postalAddress ?? ""],
+        ["Contact", p.contact],
+        ["Tax / IRD reference", p.registration ?? ""],
+        ["Designated position", p.position ?? ""],
+        ["Additional detail", p.extra],
+      ];
+  return (
+    <div style={{ border: `1px solid ${t.chromeRule}` }}>
+      <div
+        className="flex items-center justify-between gap-2 px-3 py-1.5"
+        style={{ background: t.surface, borderBottom: `1px solid ${t.chromeRule}` }}
+      >
+        <span className="text-[10.5px] font-semibold uppercase tracking-[0.14em]" style={{ color: t.ink }}>
+          {title}
+        </span>
+        <Logo src={p.logo} alt={`${title} logo`} h={18} s={s.logo} />
+      </div>
+      <table className="w-full border-collapse text-[11.5px]">
+        <tbody>
+          {rows
+            .filter(([, v]) => (v ?? "").trim().length > 0)
+            .map(([k, v]) => (
+              <tr key={k} style={{ borderBottom: `1px solid ${t.chromeRule}` }}>
+                <th
+                  className="w-[42%] px-2.5 py-1.5 text-left align-top text-[10px] font-medium uppercase tracking-wide"
+                  style={{ color: t.muted, borderRight: `1px solid ${t.chromeRule}` }}
+                >
+                  {k}
+                </th>
+                <td className="px-2.5 py-1.5 align-top leading-snug" style={{ color: t.body }}>
+                  {v}
+                </td>
+              </tr>
+            ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 function PartyCard({ title, p, t, s }: { title: string; p: Party; t: DocTheme; s: DocSettings }) {
   return (
     <div style={{ border: `1px solid ${t.chromeRule}` }}>
@@ -447,6 +516,70 @@ function buildBlocks(ctx: Ctx): Block[] {
       ),
     });
   }
+  if (a.letter.enabled) {
+    blocks.push({
+      id: "letter",
+      kind: "other",
+      label: "Work Employment Agreement Letter",
+      breakBefore: true,
+      node: (
+        <div>
+          <SectionBar index="Letter" title={a.letter.title} t={t} gap={s.sectionSpacing} />
+          <div
+            className="mb-5 flex flex-wrap items-start justify-between gap-4 pb-3"
+            style={{ borderBottom: `1px solid ${t.chromeRule}` }}
+          >
+            <div className="text-[11.5px] leading-snug" style={{ color: t.muted }}>
+              <div className={`${t.headingClass} text-[14px] font-semibold`} style={{ color: t.ink }}>
+                {a.employer.legalName || a.employer.name}
+              </div>
+              {a.employer.address ? <div>{a.employer.address}</div> : null}
+              {a.employer.contact ? <div>{a.employer.contact}</div> : null}
+              {a.employer.website ? <div>{a.employer.website}</div> : null}
+            </div>
+            <div className="text-right text-[11px] leading-snug" style={{ color: t.muted }}>
+              <div>{formatDate(a.agreementDate)}</div>
+              {a.letter.reference ? <div className="mt-1">{a.letter.reference}</div> : null}
+            </div>
+          </div>
+          <div className="mb-4 text-[11.5px] leading-snug" style={{ color: t.body }}>
+            <div className="font-semibold" style={{ color: t.ink }}>
+              {a.employee.legalName || a.employee.name}
+            </div>
+            {a.employee.address ? <div>{a.employee.address}</div> : null}
+          </div>
+          <p className="mb-3 text-[13px]" style={{ color: t.ink }}>
+            {a.letter.salutation}
+          </p>
+          <div
+            className="doc-prose text-[13px] leading-[1.78]"
+            style={{ color: t.body }}
+            dangerouslySetInnerHTML={{ __html: a.letter.html }}
+          />
+          <div className="mt-8">
+            <div className="text-[13px]" style={{ color: t.body }}>
+              {a.letter.signOff}
+            </div>
+            <div className="mt-10 w-64" style={{ borderBottom: `1px solid ${t.muted}` }} />
+            <div className={`${t.headingClass} mt-1 text-[13px] font-semibold`} style={{ color: t.ink }}>
+              {a.letter.signerName}
+            </div>
+            <div className="text-[11px]" style={{ color: t.muted }}>
+              {a.letter.signerTitle}
+            </div>
+          </div>
+          <p
+            className="mt-6 pt-3 text-[10.5px] italic leading-relaxed"
+            style={{ borderTop: `1px solid ${t.chromeRule}`, color: t.muted }}
+          >
+            This letter is part of a private employment record. It is not issued by or affiliated
+            with any government agency and does not confirm any visa, permit or accreditation.
+          </p>
+        </div>
+      ),
+    });
+  }
+
 
   blocks.push({
     id: "title",
@@ -469,6 +602,33 @@ function buildBlocks(ctx: Ctx): Block[] {
       </div>
     ),
   });
+
+  blocks.push({
+    id: "notice",
+    kind: "other",
+    label: "Private record notice",
+    keepWithNext: true,
+    node: (
+      <div
+        className="mb-6 flex gap-0 overflow-hidden"
+        style={{ border: `2px solid ${t.ink}`, background: t.chromeBg }}
+      >
+        <div className="w-[10px] shrink-0" style={{ background: t.accent }} />
+        <div className="px-4 py-3">
+          <div
+            className="text-[11px] font-semibold uppercase tracking-[0.2em]"
+            style={{ color: t.ink }}
+          >
+            {a.noticeTitle}
+          </div>
+          <p className="mt-1.5 text-[11.5px] leading-[1.6]" style={{ color: t.body }}>
+            {a.noticeText}
+          </p>
+        </div>
+      </div>
+    ),
+  });
+
 
   blocks.push({
     id: "parties-bar",
@@ -506,6 +666,87 @@ function buildBlocks(ctx: Ctx): Block[] {
       </div>
     ),
   });
+
+  blocks.push({
+    id: "particulars-bar",
+    kind: "band",
+    label: "Part A2 · Particulars & references",
+    keepWithNext: true,
+    breakBefore: true,
+    node: (
+      <SectionBar
+        index="Part A2"
+        title="Party particulars and reference details"
+        t={t}
+        gap={s.sectionSpacing}
+      />
+    ),
+  });
+
+  blocks.push({
+    id: "particulars",
+    kind: "other",
+    label: "Party particulars",
+    node: (
+      <div className="grid grid-cols-2 gap-5" style={{ marginBottom: s.sectionSpacing }}>
+        <ParticularsCard title="Employer particulars" p={a.employer} t={t} s={s} entity />
+        <ParticularsCard title="Employee particulars" p={a.employee} t={t} s={s} />
+      </div>
+    ),
+  });
+
+  blocks.push({
+    id: "references",
+    kind: "other",
+    label: "Reference details",
+    node: (
+      <div style={{ marginBottom: s.sectionSpacing, border: `1px solid ${t.chromeRule}` }}>
+        <div
+          className="flex items-center justify-between gap-3 px-3 py-1.5"
+          style={{ background: t.surface, borderBottom: `1px solid ${t.chromeRule}` }}
+        >
+          <span className="text-[10.5px] font-semibold uppercase tracking-[0.14em]" style={{ color: t.ink }}>
+            Reference details
+          </span>
+          <span
+            className="px-1.5 py-0.5 text-[8.5px] font-semibold uppercase tracking-[0.16em]"
+            style={{ background: t.accent, color: t.bandText }}
+          >
+            Party-supplied
+          </span>
+        </div>
+        {a.references.length ? (
+          <table className="w-full border-collapse text-[11.5px]">
+            <tbody>
+              {a.references.map((r) => (
+                <tr key={r.id} style={{ borderBottom: `1px solid ${t.chromeRule}` }}>
+                  <th
+                    className="w-1/2 px-3 py-1.5 text-left align-top text-[10.5px] font-medium uppercase tracking-wide"
+                    style={{ color: t.muted, borderRight: `1px solid ${t.chromeRule}` }}
+                  >
+                    {r.label || "—"}
+                  </th>
+                  <td className="px-3 py-1.5 align-top tabular-nums" style={{ color: t.body }}>
+                    {r.value || "—"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <p className="px-3 py-3 text-[11.5px] italic" style={{ color: t.muted }}>
+            No reference numbers recorded.
+          </p>
+        )}
+        {a.referencesNote ? (
+          <p className="px-3 py-2 text-[10.5px] italic leading-relaxed" style={{ color: t.muted }}>
+            {a.referencesNote}
+          </p>
+        ) : null}
+      </div>
+    ),
+  });
+
 
   blocks.push({
     id: "terms-bar",

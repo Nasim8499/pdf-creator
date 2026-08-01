@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   FileDown,
   History,
@@ -22,6 +22,8 @@ import { SettingsPanel } from "@/components/agreement/SettingsPanel";
 import { PreviewDocument } from "@/components/agreement/PreviewDocument";
 import { VersionDiffDialog } from "@/components/agreement/VersionDiffDialog";
 import { LayoutAuditPanel } from "@/components/agreement/LayoutAuditPanel";
+import { CompliancePanel } from "@/components/agreement/CompliancePanel";
+import { scanAgreement } from "@/lib/compliance";
 import { errorCount, type LayoutFingerprint, type LayoutReport } from "@/lib/layout-audit";
 import {
   clone,
@@ -135,6 +137,16 @@ function AgreementEditorPage() {
   }, []);
 
   const print = (doc: Agreement, force = false) => {
+    const blocked = scanAgreement(doc);
+    if (blocked.length > 0) {
+      toast.error(
+        `Export blocked — ${blocked.length} government-issued field${blocked.length === 1 ? "" : "s"} found`,
+        {
+          description: `${blocked[0]?.label}: “${blocked[0]?.match}” in ${blocked[0]?.field}. Remove these before exporting.`,
+        },
+      );
+      return;
+    }
     if (!force && doc === agreement) {
       const errs = errorCount(report);
       if (errs > 0) {
@@ -152,6 +164,7 @@ function AgreementEditorPage() {
     }, 250);
   };
 
+
   const saveVersion = () => {
     const label =
       versionLabel.trim() || `Version ${versions.length + 1} — ${agreement.employee.name || "Draft"}`;
@@ -164,6 +177,8 @@ function AgreementEditorPage() {
   };
 
   const shown = printTarget ?? agreement;
+  const findings = useMemo(() => scanAgreement(agreement), [agreement]);
+
 
   const editorColumn = (
     <div className="space-y-8 p-4 sm:p-5">
@@ -248,6 +263,7 @@ function AgreementEditorPage() {
           <EditorPanel value={agreement} onChange={update} />
         </TabsContent>
         <TabsContent value="design" className="mt-5 space-y-8">
+          <CompliancePanel findings={findings} />
           <LayoutAuditPanel
             report={report}
             hasBaseline={baseline !== null}

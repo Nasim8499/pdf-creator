@@ -28,12 +28,24 @@ function SectionTitle({ children, action }: { children: string; action?: React.R
 function PartyFields({
   title,
   party,
+  entity,
   onChange,
 }: {
   title: string;
   party: Party;
+  entity?: boolean;
   onChange: (patch: Partial<Party>) => void;
 }) {
+  const field = (label: string, key: keyof Party, placeholder?: string) => (
+    <div className="space-y-1.5">
+      <Label className="text-xs">{label}</Label>
+      <Input
+        value={(party[key] as string) ?? ""}
+        placeholder={placeholder ?? ""}
+        onChange={(e) => onChange({ [key]: e.target.value } as Partial<Party>)}
+      />
+    </div>
+  );
   return (
     <div className="space-y-2.5 rounded-lg border border-border bg-card p-3">
       <div className="text-sm font-semibold">{title}</div>
@@ -42,22 +54,15 @@ function PartyFields({
         value={party.logo}
         onChange={(logo) => onChange({ logo })}
       />
-      <div className="space-y-1.5">
-        <Label className="text-xs">Name</Label>
-        <Input value={party.name} onChange={(e) => onChange({ name: e.target.value })} />
-      </div>
-      <div className="space-y-1.5">
-        <Label className="text-xs">Address</Label>
-        <Input value={party.address} onChange={(e) => onChange({ address: e.target.value })} />
-      </div>
-      <div className="space-y-1.5">
-        <Label className="text-xs">Contact</Label>
-        <Input value={party.contact} onChange={(e) => onChange({ contact: e.target.value })} />
-      </div>
-      <div className="space-y-1.5">
-        <Label className="text-xs">Additional detail</Label>
-        <Input value={party.extra} onChange={(e) => onChange({ extra: e.target.value })} />
-      </div>
+      {field(entity ? "Entity name (as used in the document)" : "Name", "name")}
+      {field(entity ? "Full legal entity name" : "Full legal name", "legalName")}
+      {field(entity ? "NZBN / company number" : "Tax / IRD reference", "registration")}
+      {field(entity ? "Registered address" : "Residential address", "address")}
+      {field("Postal address", "postalAddress", "Optional")}
+      {field("Contact", "contact")}
+      {entity ? field("Website", "website") : null}
+      {field(entity ? "Business activity" : "Designated position", "position")}
+      {field("Additional detail", "extra")}
     </div>
   );
 }
@@ -95,9 +100,31 @@ export function EditorPanel({ value, onChange }: Props) {
       <Separator />
 
       <section className="space-y-3">
+        <SectionTitle>Private-record notice</SectionTitle>
+        <p className="text-xs text-muted-foreground">
+          Printed prominently on the first page of the agreement and on the cover.
+        </p>
+        <div className="space-y-1.5">
+          <Label className="text-xs">Notice heading</Label>
+          <Input value={value.noticeTitle} onChange={(e) => set({ noticeTitle: e.target.value })} />
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs">Notice text</Label>
+          <Textarea
+            rows={5}
+            value={value.noticeText}
+            onChange={(e) => set({ noticeText: e.target.value })}
+          />
+        </div>
+      </section>
+
+      <Separator />
+
+      <section className="space-y-3">
         <SectionTitle>Parties</SectionTitle>
         <PartyFields
           title="Employer"
+          entity
           party={value.employer}
           onChange={(patch) => set({ employer: { ...value.employer, ...patch } })}
         />
@@ -106,6 +133,150 @@ export function EditorPanel({ value, onChange }: Props) {
           party={value.employee}
           onChange={(patch) => set({ employee: { ...value.employee, ...patch } })}
         />
+      </section>
+
+      <Separator />
+
+      <section className="space-y-3">
+        <SectionTitle
+          action={
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() =>
+                set({
+                  references: [...value.references, { id: uid(), label: "Reference", value: "" }],
+                })
+              }
+            >
+              <Plus className="size-3.5" /> Reference
+            </Button>
+          }
+        >
+          Reference details (party-supplied)
+        </SectionTitle>
+        <p className="text-xs text-muted-foreground">
+          Your own internal file or reference numbers only. Agency-issued IDs, visa statuses and
+          accreditation numbers are blocked by the compliance check.
+        </p>
+        {value.references.map((r) => (
+          <div key={r.id} className="flex items-center gap-2">
+            <Input
+              value={r.label}
+              placeholder="Label"
+              onChange={(e) =>
+                set({
+                  references: value.references.map((x) =>
+                    x.id === r.id ? { ...x, label: e.target.value } : x,
+                  ),
+                })
+              }
+            />
+            <Input
+              value={r.value}
+              placeholder="Number"
+              onChange={(e) =>
+                set({
+                  references: value.references.map((x) =>
+                    x.id === r.id ? { ...x, value: e.target.value } : x,
+                  ),
+                })
+              }
+            />
+            <Button
+              size="icon"
+              variant="ghost"
+              aria-label="Delete reference"
+              onClick={() => set({ references: value.references.filter((x) => x.id !== r.id) })}
+            >
+              <Trash2 className="size-4 text-destructive" />
+            </Button>
+          </div>
+        ))}
+        <div className="space-y-1.5">
+          <Label className="text-xs">Note printed under the table</Label>
+          <Textarea
+            rows={3}
+            value={value.referencesNote}
+            onChange={(e) => set({ referencesNote: e.target.value })}
+          />
+        </div>
+      </section>
+
+      <Separator />
+
+      <section className="space-y-3">
+        <SectionTitle
+          action={
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">Include</span>
+              <Switch
+                checked={value.letter.enabled}
+                aria-label="Include the covering letter"
+                onCheckedChange={(checked) =>
+                  set({ letter: { ...value.letter, enabled: checked } })
+                }
+              />
+            </div>
+          }
+        >
+          Work Employment Agreement Letter
+        </SectionTitle>
+        <div className="space-y-2.5 rounded-lg border border-border bg-card p-3">
+          <div className="grid gap-2.5 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label className="text-xs">Letter heading</Label>
+              <Input
+                value={value.letter.title}
+                onChange={(e) => set({ letter: { ...value.letter, title: e.target.value } })}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Reference line</Label>
+              <Input
+                value={value.letter.reference}
+                onChange={(e) => set({ letter: { ...value.letter, reference: e.target.value } })}
+              />
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs">Salutation</Label>
+            <Input
+              value={value.letter.salutation}
+              onChange={(e) => set({ letter: { ...value.letter, salutation: e.target.value } })}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs">Letter body</Label>
+            <RichTextEditor
+              value={value.letter.html}
+              onChange={(html) => set({ letter: { ...value.letter, html } })}
+            />
+          </div>
+          <div className="grid gap-2.5 sm:grid-cols-3">
+            <div className="space-y-1.5">
+              <Label className="text-xs">Sign-off</Label>
+              <Input
+                value={value.letter.signOff}
+                onChange={(e) => set({ letter: { ...value.letter, signOff: e.target.value } })}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Signer name</Label>
+              <Input
+                value={value.letter.signerName}
+                onChange={(e) => set({ letter: { ...value.letter, signerName: e.target.value } })}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Signer title</Label>
+              <Input
+                value={value.letter.signerTitle}
+                onChange={(e) => set({ letter: { ...value.letter, signerTitle: e.target.value } })}
+              />
+            </div>
+          </div>
+        </div>
       </section>
 
       <Separator />
@@ -141,6 +312,7 @@ export function EditorPanel({ value, onChange }: Props) {
       </section>
 
       <Separator />
+
 
       <section className="space-y-3">
         <SectionTitle

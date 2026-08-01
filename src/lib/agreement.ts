@@ -31,9 +31,38 @@ export type Party = {
   address: string;
   contact: string;
   extra: string;
+  /** Full legal name as it should appear on the agreement. */
+  legalName?: string;
+  /** NZBN / company number for an entity, or IRD-style reference for a person. */
+  registration?: string;
+  /** Postal address, if different from the physical address. */
+  postalAddress?: string;
+  website?: string;
+  /** Designated position (employee) or business activity (employer). */
+  position?: string;
   /** Data URL of an uploaded logo, shown on the cover, page headers and footers. */
   logo?: string | undefined;
 };
+
+/** Party-supplied internal file or reference number. Never an agency-issued ID. */
+export type ReferenceItem = {
+  id: string;
+  label: string;
+  value: string;
+};
+
+/** Optional covering letter printed ahead of the agreement. */
+export type LetterSettings = {
+  enabled: boolean;
+  title: string;
+  reference: string;
+  salutation: string;
+  html: string;
+  signOff: string;
+  signerName: string;
+  signerTitle: string;
+};
+
 
 export type LogoFit = "contain" | "cover";
 export type LogoAlign = "left" | "center" | "right";
@@ -129,15 +158,23 @@ export type Agreement = {
   subtitle: string;
   headerText: string;
   footerText: string;
+  /** Prominent notice stating this is a private, non-government record. */
+  noticeTitle: string;
+  noticeText: string;
   employer: Party;
   employee: Party;
   agreementDate: string;
   startDate: string;
   endDate: string;
+  /** Party-supplied internal file/reference numbers. */
+  references: ReferenceItem[];
+  referencesNote: string;
+  letter: LetterSettings;
   clauses: Clause[];
   signatures: SignatureBlock[];
   consents: Consent[];
   settings: DocSettings;
+
 };
 
 
@@ -150,7 +187,7 @@ export type Version = {
 
 export const uid = () => Math.random().toString(36).slice(2, 10);
 
-export const STORAGE_KEY = "employment-agreement-editor-v3";
+export const STORAGE_KEY = "employment-agreement-editor-v4";
 
 export const defaultSettings: DocSettings = {
   pageSize: "A4",
@@ -223,23 +260,54 @@ export const defaultAgreement: Agreement = {
   documentTitle: "Individual Employment Agreement",
   subtitle: "New Zealand format — neutral template, not an official or government-issued document",
   headerText: "Individual Employment Agreement — New Zealand",
-  footerText: "Draft for review. Minimum entitlements under New Zealand law always apply.",
+  footerText: "Private record between the parties. Minimum entitlements under New Zealand law always apply.",
+  noticeTitle: "Private employment record — not a government document",
+  noticeText:
+    "This is a private employment and application record prepared by and between the parties named in it. It is not issued by, endorsed by, or affiliated with Immigration authorities, any ministry, or any other government agency, and it does not evidence, grant or confirm any visa, permit, accreditation or other official status. All reference numbers shown are supplied by the parties for their own filing purposes only. Minimum entitlements under New Zealand employment law apply regardless of what is recorded here.",
   employer: {
     name: "Employer Company Limited",
+    legalName: "Employer Company Limited",
     address: "12 Example Street, Newtown, Wellington 6021, New Zealand",
+    postalAddress: "PO Box 1000, Wellington 6140, New Zealand",
     contact: "+64 4 000 0000 · hr@employer.example",
-    extra: "NZBN: 9429000000000 · IRD: 000-000-000",
+    website: "www.employer.example",
+    registration: "NZBN 9429000000000 · Company no. 0000000",
+    position: "Manufacturing and operations",
+    extra: "IRD: 000-000-000",
   },
   employee: {
     name: "Employee Full Name",
+    legalName: "Employee Full Legal Name",
     address: "34 Sample Road, Papanui, Christchurch 8052, New Zealand",
+    postalAddress: "",
     contact: "employee@example.com · +64 21 000 000",
-    extra: "Position: Operations Assistant · IRD: 000-000-000",
+    website: "",
+    registration: "IRD 000-000-000",
+    position: "Operations Assistant",
+    extra: "Preferred name: Employee",
   },
   agreementDate: "2026-08-01",
   startDate: "2026-09-01",
   endDate: "",
+  references: [
+    { id: uid(), label: "Employer file no.", value: "HR-2026-0001" },
+    { id: uid(), label: "Employee file no.", value: "EMP-0001" },
+    { id: uid(), label: "Offer reference", value: "OFFER-2026-0001" },
+  ],
+  referencesNote:
+    "These reference numbers are supplied by the parties for internal filing only. They are not issued by, and carry no status with, any government agency.",
+  letter: {
+    enabled: true,
+    title: "Work Employment Agreement Letter",
+    reference: "Ref: OFFER-2026-0001 (party-supplied)",
+    salutation: "Dear Employee Full Name,",
+    html: "<p>We are pleased to confirm your offer of employment with Employer Company Limited in the position of Operations Assistant. This letter accompanies, and should be read together with, the Individual Employment Agreement that follows.</p><p>Your employment is intended to commence on the commencement date recorded in the agreement, at the workplace and on the hours, remuneration and leave terms set out in Part B. Any conditions of employment, including any that depend on your own right to work in New Zealand, are described in the agreement itself; this letter does not confirm or grant any such right.</p><p>Please read the whole agreement carefully, take independent advice if you wish, and sign and return one copy. Keep the other copy for your records. If anything in this letter or the agreement is unclear, contact us before signing.</p>",
+    signOff: "Yours sincerely,",
+    signerName: "Authorised Representative Name",
+    signerTitle: "People & Culture Manager, Employer Company Limited",
+  },
   clauses: nzClauses.map((c) => ({ ...c })),
+
 
   signatures: [
     {
@@ -303,6 +371,12 @@ export function withSettings(doc: Agreement): Agreement {
   const s = (doc.settings ?? {}) as Partial<DocSettings>;
   return {
     ...doc,
+    noticeTitle: doc.noticeTitle ?? defaultAgreement.noticeTitle,
+    noticeText: doc.noticeText ?? defaultAgreement.noticeText,
+    references: doc.references ?? clone(defaultAgreement.references),
+    referencesNote: doc.referencesNote ?? defaultAgreement.referencesNote,
+    letter: { ...clone(defaultAgreement.letter), ...(doc.letter ?? {}) },
+
     settings: {
       ...defaultSettings,
       ...s,
