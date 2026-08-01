@@ -1,4 +1,6 @@
 import { nzClauses } from "./nz-clauses";
+import type { PageSizeName, ThemeName } from "./doc-theme";
+
 
 export type Clause = {
   id: string;
