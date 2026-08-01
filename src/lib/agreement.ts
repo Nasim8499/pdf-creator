@@ -158,15 +158,23 @@ export type Agreement = {
   subtitle: string;
   headerText: string;
   footerText: string;
+  /** Prominent notice stating this is a private, non-government record. */
+  noticeTitle: string;
+  noticeText: string;
   employer: Party;
   employee: Party;
   agreementDate: string;
   startDate: string;
   endDate: string;
+  /** Party-supplied internal file/reference numbers. */
+  references: ReferenceItem[];
+  referencesNote: string;
+  letter: LetterSettings;
   clauses: Clause[];
   signatures: SignatureBlock[];
   consents: Consent[];
   settings: DocSettings;
+
 };
 
 
