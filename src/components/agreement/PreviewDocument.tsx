@@ -374,10 +374,82 @@ function PartyCard({ title, p, t, s }: { title: string; p: Party; t: DocTheme; s
   );
 }
 
+/** Short label chip printed on the cover, derived from the chosen template. */
+function coverBadge(a: Agreement) {
+  const badges: Record<string, string> = {
+    individual: "Permanent employment",
+    contractor: "Contract for services",
+    casual: "Casual · no guaranteed hours",
+    "fixed-term": "Fixed term",
+  };
+  return badges[a.templateId ?? "individual"] ?? "Private agreement";
+}
+
+/** Full-page divider that opens each Part of the document. */
+function PartDivider({
+  index,
+  title,
+  blurb,
+  t,
+}: {
+  index: string;
+  title: string;
+  blurb: string;
+  t: DocTheme;
+}) {
+  return (
+    <div
+      className="relative flex flex-col justify-center overflow-hidden px-10"
+      style={{ minHeight: 720, background: t.surface, border: `1px solid ${t.chromeRule}` }}
+    >
+      <div className="absolute left-0 top-0" style={{ width: 10, height: "100%", background: t.ink }} />
+      <div
+        className="absolute right-0 top-0 opacity-[0.06]"
+        style={{
+          fontSize: 320,
+          lineHeight: 0.8,
+          color: t.ink,
+          fontWeight: 700,
+          transform: "translate(12%, -6%)",
+        }}
+      >
+        {index.replace(/[^A-Za-z0-9]/g, "").slice(-1)}
+      </div>
+      <div className="relative">
+        <div className="text-[11px] font-semibold uppercase tracking-[0.34em]" style={{ color: t.accent }}>
+          {index}
+        </div>
+        <h2
+          className={`${t.headingClass} mt-3 text-[34px] font-semibold leading-tight`}
+          style={{ color: t.ink }}
+        >
+          {title}
+        </h2>
+        <div className="mt-4 h-[3px] w-24" style={{ background: t.accent }} />
+        <p className="mt-4 max-w-[70%] text-[12.5px] leading-relaxed" style={{ color: t.muted }}>
+          {blurb}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 function buildBlocks(ctx: Ctx): Block[] {
+
   const { a, s, t } = ctx;
   const blocks: Block[] = [];
   const brk = s.strictBreaks;
+
+  const divider = (index: string, title: string, blurb: string) => {
+    if (!s.strictBreaks) return;
+    blocks.push({
+      id: `divider-${index}`,
+      kind: "band",
+      label: `${index} divider`,
+      breakBefore: true,
+      node: <PartDivider index={index} title={title} blurb={blurb} t={t} />,
+    });
+  };
 
   if (s.showCover) {
     blocks.push({
@@ -385,8 +457,17 @@ function buildBlocks(ctx: Ctx): Block[] {
       kind: "cover",
       label: "Cover page",
       node: (
-        <div className="flex flex-col justify-between" style={{ minHeight: 820 }}>
-          <div>
+        <div className="relative flex flex-col justify-between" style={{ minHeight: 820 }}>
+          <div
+            className="absolute left-0 top-0"
+            style={{ width: 6, height: "100%", background: t.ink }}
+          />
+          <div
+            className="absolute left-0 top-0"
+            style={{ width: 6, height: 180, background: t.accent }}
+          />
+
+          <div className="pl-7">
             <div
               className="flex items-start justify-between gap-6 pb-4"
               style={{ borderBottom: `2px solid ${t.ink}` }}
@@ -403,12 +484,12 @@ function buildBlocks(ctx: Ctx): Block[] {
                 <span />
               )}
               <div
-                className="pt-1 text-center text-[9.5px] uppercase leading-relaxed tracking-[0.2em]"
+                className="pt-1 text-center text-[9.5px] uppercase leading-relaxed tracking-[0.24em]"
                 style={{ color: t.muted }}
               >
                 New Zealand
                 <br />
-                Individual Employment Agreement
+                {a.headerText || a.documentTitle}
               </div>
               {s.logo.showOnCover ? (
                 <LogoSlot
@@ -422,42 +503,68 @@ function buildBlocks(ctx: Ctx): Block[] {
                 <span />
               )}
             </div>
-            <div
-              className="mt-3 flex justify-between text-[9px] uppercase tracking-[0.18em]"
-              style={{ color: t.muted }}
-            >
-              <span>Part A · Parties</span>
-              <span>Part B · Terms</span>
-              <span>Part C · Consents</span>
-              <span>Part D · Signatures</span>
+            <div className="mt-4 flex flex-wrap gap-1.5">
+              {["Part A · Parties", "Part B · Terms", "Part C · Consents", "Part D · Signatures"].map(
+                (label) => (
+                  <span
+                    key={label}
+                    className="px-2 py-[3px] text-[8.5px] font-semibold uppercase tracking-[0.18em]"
+                    style={{ border: `1px solid ${t.chromeRule}`, color: t.muted }}
+                  >
+                    {label}
+                  </span>
+                ),
+              )}
             </div>
           </div>
 
-          <div>
-            <div className="mb-5 h-[3px] w-24" style={{ background: t.accent }} />
+          <div className="pl-7">
+            <span
+              className="inline-block px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.24em]"
+              style={{ background: t.accent, color: t.bandText }}
+            >
+              {coverBadge(a)}
+            </span>
             <h1
-              className={`${t.headingClass} text-[42px] font-semibold leading-[1.1]`}
+              className={`${t.headingClass} mt-5 text-[46px] font-semibold leading-[1.05]`}
               style={{ color: t.ink }}
             >
               {a.documentTitle}
             </h1>
+            <div className="mt-4 h-[3px] w-28" style={{ background: t.accent }} />
             {a.subtitle ? (
-              <p className="mt-4 max-w-[80%] text-[13px] italic leading-relaxed" style={{ color: t.muted }}>
+              <p
+                className="mt-4 max-w-[82%] text-[13px] italic leading-relaxed"
+                style={{ color: t.muted }}
+              >
                 {a.subtitle}
               </p>
             ) : null}
-            <div className="mt-8 grid grid-cols-2" style={{ borderTop: `1px solid ${t.chromeRule}`, borderBottom: `1px solid ${t.chromeRule}` }}>
+            <div
+              className="mt-8 grid grid-cols-2"
+              style={{ border: `1px solid ${t.chromeRule}`, background: t.surface }}
+            >
               {[
-                { k: "Employer", v: a.employer.name || "—" },
-                { k: "Employee", v: a.employee.name || "—" },
+                { k: "Employer / Principal", v: a.employer.name || "—" },
+                { k: "Employee / Contractor", v: a.employee.name || "—" },
                 { k: "Date of agreement", v: formatDate(a.agreementDate) },
                 { k: "Commencement", v: formatDate(a.startDate) },
-              ].map(({ k, v }) => (
-                <div key={k} className="px-1 py-3">
-                  <div className="text-[10px] uppercase tracking-[0.18em]" style={{ color: t.muted }}>
+              ].map(({ k, v }, i) => (
+                <div
+                  key={k}
+                  className="px-4 py-3.5"
+                  style={{
+                    borderRight: i % 2 === 0 ? `1px solid ${t.chromeRule}` : undefined,
+                    borderTop: i > 1 ? `1px solid ${t.chromeRule}` : undefined,
+                  }}
+                >
+                  <div className="text-[9.5px] uppercase tracking-[0.2em]" style={{ color: t.muted }}>
                     {k}
                   </div>
-                  <div className={`${t.headingClass} mt-1 text-[16px] font-semibold`} style={{ color: t.ink }}>
+                  <div
+                    className={`${t.headingClass} mt-1 text-[16px] font-semibold`}
+                    style={{ color: t.ink }}
+                  >
                     {v}
                   </div>
                 </div>
@@ -466,7 +573,7 @@ function buildBlocks(ctx: Ctx): Block[] {
             {s.codes.enabled && s.codes.onCover ? <VerifyMark t={t} s={s} /> : null}
           </div>
 
-          <div>
+          <div className="pl-7">
             {s.showSponsorStrip && s.sponsorLogo.onCover ? <SponsorStrip {...ctx} /> : null}
             <p
               className="pt-3 text-[11px] leading-relaxed"
@@ -481,6 +588,7 @@ function buildBlocks(ctx: Ctx): Block[] {
       ),
     });
   }
+
 
   if (s.showContents) {
     blocks.push({
@@ -630,6 +738,8 @@ function buildBlocks(ctx: Ctx): Block[] {
   });
 
 
+  divider("Part A", "Parties to this agreement", "Who the parties are, the particulars each of them has supplied, the key dates, and the reference numbers used for filing.");
+
   blocks.push({
     id: "parties-bar",
     kind: "band",
@@ -748,6 +858,8 @@ function buildBlocks(ctx: Ctx): Block[] {
   });
 
 
+  divider("Part B", "Terms and conditions", "The substantive terms agreed between the parties, read together with every minimum entitlement that applies under New Zealand law.");
+
   blocks.push({
     id: "terms-bar",
     kind: "band",
@@ -788,6 +900,8 @@ function buildBlocks(ctx: Ctx): Block[] {
   });
 
   if (a.consents.length) {
+    divider("Part C", "Acknowledgements and consents", "Confirmations recorded by the parties at the time of signing, including advice, privacy and policy acknowledgements.");
+
     blocks.push({
       id: "consents-head",
       kind: "band",
@@ -826,6 +940,8 @@ function buildBlocks(ctx: Ctx): Block[] {
   }
 
   if (a.signatures.length) {
+    divider("Part D", "Execution and signatures", "Signature blocks for each party, with the verification mark and any sponsor recognition printed alongside.");
+
     blocks.push({
       id: "sign-head",
       kind: "band",
@@ -902,6 +1018,8 @@ function buildBlocks(ctx: Ctx): Block[] {
       { item: "Government-issued fields", status: "Excluded", note: "Client IDs, visa statuses, accreditation and verification portals are never printed" },
     ];
     const trail = a.auditTrail ?? [];
+
+    divider("Appendix", "Compliance audit trail", "An automatically generated record of what this export contains, and of any labelled input that was remapped or removed.");
 
     blocks.push({
       id: "appendix-bar",

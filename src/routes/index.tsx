@@ -36,6 +36,8 @@ import {
 import { useThrottledValue } from "@/hooks/use-throttled-value";
 
 
+import { TemplatePicker } from "@/components/agreement/TemplatePicker";
+import { pdfFileName, printAsPdf } from "@/lib/pdf";
 import { PreviewDocument } from "@/components/agreement/PreviewDocument";
 import { VersionDiffDialog } from "@/components/agreement/VersionDiffDialog";
 import { LayoutAuditPanel } from "@/components/agreement/LayoutAuditPanel";
@@ -185,7 +187,7 @@ function AgreementEditorPage() {
     setAgreement((prev) => updater(prev));
   }, []);
 
-  const print = (doc: Agreement, force = false) => {
+  const print = (doc: Agreement, force = false, fileLabel?: string) => {
     const blocked = scanAgreement(doc);
     if (blocked.length > 0) {
       const groups = new Map<string, { label: string; hint: string; fields: string[] }>();
@@ -240,8 +242,7 @@ function AgreementEditorPage() {
     }
     setPrintTarget(doc);
     setTimeout(() => {
-      window.print();
-      setTimeout(() => setPrintTarget(null), 300);
+      printAsPdf(pdfFileName(doc, fileLabel), () => setTimeout(() => setPrintTarget(null), 300));
     }, 250);
   };
 
@@ -280,6 +281,7 @@ function AgreementEditorPage() {
 
   const editorColumn = (
     <div className="space-y-8 p-4 sm:p-5">
+      <TemplatePicker value={agreement} onChange={update} />
       <div className="space-y-3 rounded-lg border border-border bg-muted/40 p-3">
         <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
           <History className="size-3.5" /> Version history
@@ -373,7 +375,7 @@ function AgreementEditorPage() {
               setAgreement(clone(d.data));
               toast.success("Draft opened", { description: d.label });
             }}
-            onExport={(d) => print(d.data)}
+            onExport={(d) => print(d.data, false, d.label)}
             onRename={(id, label) =>
               setDrafts((prev) => {
                 const next = renameDraft(prev, id, label);
