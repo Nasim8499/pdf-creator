@@ -886,8 +886,131 @@ function buildBlocks(ctx: Ctx): Block[] {
     }
   }
 
+  if (s.showAppendix) {
+    const inventory: { item: string; status: string; note: string }[] = [
+      { item: "Cover page", status: s.showCover ? "Included" : "Excluded", note: "Title, parties and document marks" },
+      { item: "Table of contents", status: s.showContents ? "Included" : "Excluded", note: "Clause index" },
+      { item: "Covering letter", status: a.letter?.enabled ? "Included" : "Excluded", note: "Party-issued covering correspondence" },
+      { item: "Private record notice", status: "Included", note: "Non-government declaration" },
+      { item: "Part A · Parties", status: "Included", note: "Employer and employee, dates" },
+      { item: "Part A2 · Particulars & references", status: "Included", note: `${a.references.length} party-supplied reference item(s)` },
+      { item: "Part B · Terms", status: "Included", note: `${a.clauses.length} clause(s)` },
+      { item: "Part C · Consents", status: a.consents.length ? "Included" : "Excluded", note: `${a.consents.length} acknowledgement(s)` },
+      { item: "Part D · Signatures", status: a.signatures.length ? "Included" : "Excluded", note: `${a.signatures.length} signature block(s)` },
+      { item: "Sponsor recognition", status: s.showSponsorStrip && s.sponsors.length ? "Included" : "Excluded", note: `${s.sponsors.length} sponsor mark(s)` },
+      { item: "Verification code mark", status: s.codes.enabled ? "Included" : "Excluded", note: "Party-supplied reference code only" },
+      { item: "Government-issued fields", status: "Excluded", note: "Client IDs, visa statuses, accreditation and verification portals are never printed" },
+    ];
+    const trail = a.auditTrail ?? [];
+
+    blocks.push({
+      id: "appendix-bar",
+      kind: "band",
+      label: "Appendix · Compliance audit trail",
+      keepWithNext: true,
+      breakBefore: true,
+      node: (
+        <SectionBar index="Appendix" title="Compliance audit trail" t={t} gap={s.sectionSpacing} />
+      ),
+    });
+
+    blocks.push({
+      id: "appendix-inventory",
+      kind: "other",
+      label: "Appendix · Section inventory",
+      node: (
+        <div style={{ marginBottom: s.sectionSpacing, border: `1px solid ${t.chromeRule}` }}>
+          <div
+            className="px-3 py-1.5 text-[10.5px] font-semibold uppercase tracking-[0.14em]"
+            style={{ background: t.surface, color: t.ink, borderBottom: `1px solid ${t.chromeRule}` }}
+          >
+            A1 · Sections included in this export
+          </div>
+          <table className="w-full border-collapse text-[11px]">
+            <tbody>
+              {inventory.map((row) => (
+                <tr key={row.item} style={{ borderBottom: `1px solid ${t.chromeRule}` }}>
+                  <th
+                    className="w-[40%] px-3 py-1.5 text-left align-top text-[10.5px] font-medium"
+                    style={{ color: t.ink, borderRight: `1px solid ${t.chromeRule}` }}
+                  >
+                    {row.item}
+                  </th>
+                  <td
+                    className="w-[18%] px-3 py-1.5 align-top text-[10px] font-semibold uppercase tracking-[0.12em]"
+                    style={{
+                      color: row.status === "Included" ? t.ink : t.muted,
+                      borderRight: `1px solid ${t.chromeRule}`,
+                    }}
+                  >
+                    {row.status}
+                  </td>
+                  <td className="px-3 py-1.5 align-top" style={{ color: t.body }}>
+                    {row.note}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ),
+    });
+
+    blocks.push({
+      id: "appendix-trail",
+      kind: "other",
+      label: "Appendix · Excluded items",
+      node: (
+        <div style={{ marginBottom: s.sectionSpacing, border: `1px solid ${t.chromeRule}` }}>
+          <div
+            className="px-3 py-1.5 text-[10.5px] font-semibold uppercase tracking-[0.14em]"
+            style={{ background: t.surface, color: t.ink, borderBottom: `1px solid ${t.chromeRule}` }}
+          >
+            A2 · Items remapped or excluded on compliance grounds
+          </div>
+          {trail.length ? (
+            <table className="w-full border-collapse text-[11px]">
+              <tbody>
+                {trail.map((e) => (
+                  <tr key={e.id} style={{ borderBottom: `1px solid ${t.chromeRule}` }}>
+                    <th
+                      className="w-[22%] px-3 py-1.5 text-left align-top text-[10px] font-semibold uppercase tracking-[0.12em]"
+                      style={{ color: e.action === "excluded" ? t.accent : t.muted, borderRight: `1px solid ${t.chromeRule}` }}
+                    >
+                      {e.action === "excluded" ? "Excluded" : "Remapped"}
+                    </th>
+                    <th
+                      className="w-[30%] px-3 py-1.5 text-left align-top text-[10.5px] font-medium"
+                      style={{ color: t.ink, borderRight: `1px solid ${t.chromeRule}` }}
+                    >
+                      {e.label}
+                    </th>
+                    <td className="px-3 py-1.5 align-top" style={{ color: t.body }}>
+                      {e.detail}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <p className="px-3 py-3 text-[11px] italic" style={{ color: t.muted }}>
+              No fields were remapped or excluded. All particulars in this document are
+              party-supplied.
+            </p>
+          )}
+          <p className="px-3 py-2 text-[10px] italic leading-relaxed" style={{ color: t.muted }}>
+            This appendix is generated automatically at export. It records only the composition of
+            this private record and is not issued by, or evidence of any decision of, any government
+            agency.
+          </p>
+        </div>
+      ),
+    });
+  }
+
   return blocks;
 }
+
 
 export function PreviewDocument({
   agreement,
