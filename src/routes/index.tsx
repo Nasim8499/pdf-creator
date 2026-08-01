@@ -20,7 +20,9 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EditorPanel } from "@/components/agreement/EditorPanel";
+import { QuickFillPanel } from "@/components/agreement/QuickFillPanel";
 import { SettingsPanel } from "@/components/agreement/SettingsPanel";
+
 import { PreviewDocument } from "@/components/agreement/PreviewDocument";
 import { VersionDiffDialog } from "@/components/agreement/VersionDiffDialog";
 import { LayoutAuditPanel } from "@/components/agreement/LayoutAuditPanel";
