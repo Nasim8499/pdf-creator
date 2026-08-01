@@ -598,6 +598,87 @@ function buildBlocks(ctx: Ctx): Block[] {
   });
 
   blocks.push({
+    id: "particulars-bar",
+    kind: "band",
+    label: "Part A2 · Particulars & references",
+    keepWithNext: true,
+    breakBefore: true,
+    node: (
+      <SectionBar
+        index="Part A2"
+        title="Party particulars and reference details"
+        t={t}
+        gap={s.sectionSpacing}
+      />
+    ),
+  });
+
+  blocks.push({
+    id: "particulars",
+    kind: "other",
+    label: "Party particulars",
+    node: (
+      <div className="grid grid-cols-2 gap-5" style={{ marginBottom: s.sectionSpacing }}>
+        <ParticularsCard title="Employer particulars" p={a.employer} t={t} s={s} entity />
+        <ParticularsCard title="Employee particulars" p={a.employee} t={t} s={s} />
+      </div>
+    ),
+  });
+
+  blocks.push({
+    id: "references",
+    kind: "other",
+    label: "Reference details",
+    node: (
+      <div style={{ marginBottom: s.sectionSpacing, border: `1px solid ${t.chromeRule}` }}>
+        <div
+          className="flex items-center justify-between gap-3 px-3 py-1.5"
+          style={{ background: t.surface, borderBottom: `1px solid ${t.chromeRule}` }}
+        >
+          <span className="text-[10.5px] font-semibold uppercase tracking-[0.14em]" style={{ color: t.ink }}>
+            Reference details
+          </span>
+          <span
+            className="px-1.5 py-0.5 text-[8.5px] font-semibold uppercase tracking-[0.16em]"
+            style={{ background: t.accent, color: t.bandText }}
+          >
+            Party-supplied
+          </span>
+        </div>
+        {a.references.length ? (
+          <table className="w-full border-collapse text-[11.5px]">
+            <tbody>
+              {a.references.map((r) => (
+                <tr key={r.id} style={{ borderBottom: `1px solid ${t.chromeRule}` }}>
+                  <th
+                    className="w-1/2 px-3 py-1.5 text-left align-top text-[10.5px] font-medium uppercase tracking-wide"
+                    style={{ color: t.muted, borderRight: `1px solid ${t.chromeRule}` }}
+                  >
+                    {r.label || "—"}
+                  </th>
+                  <td className="px-3 py-1.5 align-top tabular-nums" style={{ color: t.body }}>
+                    {r.value || "—"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <p className="px-3 py-3 text-[11.5px] italic" style={{ color: t.muted }}>
+            No reference numbers recorded.
+          </p>
+        )}
+        {a.referencesNote ? (
+          <p className="px-3 py-2 text-[10.5px] italic leading-relaxed" style={{ color: t.muted }}>
+            {a.referencesNote}
+          </p>
+        ) : null}
+      </div>
+    ),
+  });
+
+
+  blocks.push({
     id: "terms-bar",
     kind: "band",
     label: "Part B · Terms",
