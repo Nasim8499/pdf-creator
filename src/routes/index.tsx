@@ -22,6 +22,8 @@ import { SettingsPanel } from "@/components/agreement/SettingsPanel";
 import { PreviewDocument } from "@/components/agreement/PreviewDocument";
 import { VersionDiffDialog } from "@/components/agreement/VersionDiffDialog";
 import { LayoutAuditPanel } from "@/components/agreement/LayoutAuditPanel";
+import { CompliancePanel } from "@/components/agreement/CompliancePanel";
+import { scanAgreement } from "@/lib/compliance";
 import { errorCount, type LayoutFingerprint, type LayoutReport } from "@/lib/layout-audit";
 import {
   clone,
