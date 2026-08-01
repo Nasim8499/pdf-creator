@@ -262,61 +262,66 @@ function AgreementEditorPage() {
       </header>
 
       {/* Mobile: switch between editing and the paginated preview */}
-      <div className="lg:hidden">
-        <Tabs value={mobileTab} onValueChange={setMobileTab}>
-          <TabsList className="no-print sticky top-[57px] z-20 w-full rounded-none">
-            <TabsTrigger value="edit" className="flex-1">
-              <PencilLine className="size-3.5" /> Edit
-            </TabsTrigger>
-            <TabsTrigger value="preview" className="flex-1">
-              <FileText className="size-3.5" /> Preview
-            </TabsTrigger>
-          </TabsList>
-          <TabsContent value="edit" className="no-print mt-0">
-            {editorColumn}
-          </TabsContent>
-          <TabsContent
-            value="preview"
-            forceMount
-            className="print-keep mt-0 data-[state=inactive]:hidden"
+      <div className="no-print sticky top-[57px] z-20 grid grid-cols-2 border-b border-border bg-background lg:hidden">
+        {[
+          { id: "edit", label: "Edit", Icon: PencilLine },
+          { id: "preview", label: "Preview", Icon: FileText },
+        ].map(({ id, label, Icon }) => (
+          <button
+            key={id}
+            type="button"
+            onClick={() => setMobileTab(id)}
+            className={`flex items-center justify-center gap-1.5 py-2.5 text-sm font-medium transition-colors ${
+              mobileTab === id
+                ? "border-b-2 border-primary text-foreground"
+                : "text-muted-foreground"
+            }`}
           >
-
-            <section className="print-root bg-muted/50">
-              <div className="flex items-center justify-center gap-1 border-b border-border bg-background px-3 py-1.5 no-print">
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  aria-label="Zoom out"
-                  onClick={() => setZoom((z) => Math.max(0.25, +(z - 0.06).toFixed(2)))}
-                >
-                  <ZoomOut className="size-4" />
-                </Button>
-                <span className="w-12 text-center text-xs tabular-nums text-muted-foreground">
-                  {Math.round(zoom * 100)}%
-                </span>
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  aria-label="Zoom in"
-                  onClick={() => setZoom((z) => Math.min(1.4, +(z + 0.06).toFixed(2)))}
-                >
-                  <ZoomIn className="size-4" />
-                </Button>
-              </div>
-              {previewColumn}
-            </section>
-          </TabsContent>
-        </Tabs>
+            <Icon className="size-4" /> {label}
+          </button>
+        ))}
       </div>
 
-      {/* Desktop: side by side */}
-      <div className="hidden lg:grid lg:grid-cols-[minmax(0,440px)_minmax(0,1fr)]">
-        <section className="no-print border-r border-border">
+      <div className="lg:grid lg:grid-cols-[minmax(0,440px)_minmax(0,1fr)]">
+        <section
+          className={`no-print border-border lg:border-r ${
+            mobileTab === "preview" ? "hidden lg:block" : ""
+          }`}
+        >
           <ScrollArea className="lg:h-[calc(100vh-var(--app-header))]">{editorColumn}</ScrollArea>
         </section>
-        <section className="print-root bg-muted/50">{previewColumn}</section>
+
+        <section
+          className={`print-root print-keep bg-muted/50 ${
+            mobileTab === "edit" ? "hidden lg:block" : ""
+          }`}
+        >
+          <div className="no-print flex items-center justify-center gap-1 border-b border-border bg-background px-3 py-1.5 lg:hidden">
+            <Button
+              size="icon"
+              variant="ghost"
+              aria-label="Zoom out"
+              onClick={() => setZoom((z) => Math.max(0.25, +(z - 0.06).toFixed(2)))}
+            >
+              <ZoomOut className="size-4" />
+            </Button>
+            <span className="w-12 text-center text-xs tabular-nums text-muted-foreground">
+              {Math.round(zoom * 100)}%
+            </span>
+            <Button
+              size="icon"
+              variant="ghost"
+              aria-label="Zoom in"
+              onClick={() => setZoom((z) => Math.min(1.4, +(z + 0.06).toFixed(2)))}
+            >
+              <ZoomIn className="size-4" />
+            </Button>
+          </div>
+          {previewColumn}
+        </section>
       </div>
     </main>
   );
 }
+
 
