@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { RichTextEditor } from "./RichTextEditor";
+import { LogoPicker } from "./LogoPicker";
 import { uid, type Agreement, type Party } from "@/lib/agreement";
 
 type Props = {
@@ -36,6 +37,11 @@ function PartyFields({
   return (
     <div className="space-y-2.5 rounded-lg border border-border bg-card p-3">
       <div className="text-sm font-semibold">{title}</div>
+      <LogoPicker
+        label={`${title} logo`}
+        value={party.logo}
+        onChange={(logo) => onChange({ logo })}
+      />
       <div className="space-y-1.5">
         <Label className="text-xs">Name</Label>
         <Input value={party.name} onChange={(e) => onChange({ name: e.target.value })} />
