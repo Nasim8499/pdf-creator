@@ -460,10 +460,10 @@ function AgreementEditorPage() {
             >
               <RotateCcw className="size-4" />
             </Button>
-            <Button onClick={() => print(agreement)}>
-              <FileDown className="size-4" />
-              <span className="hidden sm:inline">Export PDF</span>
+            <Button className="hidden lg:inline-flex" onClick={() => print(agreement)}>
+              <FileDown className="size-4" /> Export PDF
             </Button>
+
           </div>
         </div>
       </header>
