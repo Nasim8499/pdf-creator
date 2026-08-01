@@ -648,10 +648,22 @@ function buildBlocks(ctx: Ctx): Block[] {
   return blocks;
 }
 
-export function PreviewDocument({ agreement, zoom = 1 }: { agreement: Agreement; zoom?: number }) {
+export function PreviewDocument({
+  agreement,
+  zoom = 1,
+  onAudit,
+  baseline,
+}: {
+  agreement: Agreement;
+  zoom?: number;
+  onAudit?: (report: LayoutReport) => void;
+  baseline?: LayoutFingerprint | null;
+}) {
   const s = agreement.settings;
   const t = docThemes[s.theme] ?? docThemes["nz-official"];
   const size = pageSizes[s.pageSize] ?? pageSizes.A4;
+  const sl = s.sponsorLogo;
+  const sponsorsOn = s.showSponsorStrip && s.sponsors.length > 0;
 
   const HEADER_H = s.showHeader ? 58 : 0;
   const FOOTER_H = s.showFooter ? 46 : 0;
@@ -664,6 +676,10 @@ export function PreviewDocument({ agreement, zoom = 1 }: { agreement: Agreement;
   const measureRef = useRef<HTMLDivElement>(null);
   const [pages, setPages] = useState<number[][]>([blocks.map((_, i) => i)]);
   const signature = JSON.stringify(agreement);
+  const auditRef = useRef(onAudit);
+  auditRef.current = onAudit;
+  const baselineRef = useRef(baseline);
+  baselineRef.current = baseline;
 
   useLayoutEffect(() => {
     const el = measureRef.current;
@@ -691,9 +707,35 @@ export function PreviewDocument({ agreement, zoom = 1 }: { agreement: Agreement;
       used += h;
     });
     if (current.length) next.push(current);
-    setPages(next.length ? next : [[]]);
+    const paged = next.length ? next : [[]];
+    setPages(paged);
+
+    if (auditRef.current) {
+      const metas: AuditBlockMeta[] = blocks.map((b, i) => ({
+        id: b.id,
+        kind: b.kind ?? "other",
+        label: b.label ?? b.id,
+        height: heights[i] ?? 0,
+        keepWithNext: b.keepWithNext,
+        breakBefore: b.breakBefore,
+      }));
+      auditRef.current(
+        buildReport(
+          {
+            blocks: metas,
+            pages: paged,
+            packHeight: PACK_H,
+            settings: s,
+            headerHeight: HEADER_H,
+            footerHeight: FOOTER_H,
+          },
+          baselineRef.current,
+        ),
+      );
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [signature, PACK_H, innerW]);
+
 
   const pageStyle: CSSProperties = {
     width: size.w,
