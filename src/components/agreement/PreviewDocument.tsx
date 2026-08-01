@@ -6,8 +6,8 @@ const PAGE_H = 1123;
 const PAD_X = 64;
 const PAD_TOP = 56;
 const PAD_BOTTOM = 56;
-const HEADER_H = 46;
-const FOOTER_H = 40;
+const HEADER_H = 58;
+const FOOTER_H = 46;
 const CONTENT_H = PAGE_H - PAD_TOP - PAD_BOTTOM - HEADER_H - FOOTER_H;
 const CONTENT_PAD_TOP = 20;
 const PACK_H = CONTENT_H - CONTENT_PAD_TOP - 8;
@@ -21,6 +21,46 @@ function Field({ label, value }: { label: string; value: string }) {
         {label}
       </span>
       <span className="flex-1 text-[12.5px] text-neutral-900">{value || "—"}</span>
+    </div>
+  );
+}
+
+function Logo({ src, alt, h }: { src?: string; alt: string; h: number }) {
+  if (!src) return null;
+  return (
+    <img
+      src={src}
+      alt={alt}
+      style={{ height: h, maxWidth: h * 4 }}
+      className="w-auto shrink-0 object-contain"
+    />
+  );
+}
+
+function LogoSlot({ src, alt, h, label }: { src?: string; alt: string; h: number; label: string }) {
+  return (
+    <div
+      className="flex items-center justify-center overflow-hidden border border-dashed border-neutral-300 px-2"
+      style={{ height: h + 12, minWidth: h + 34 }}
+    >
+      {src ? (
+        <Logo src={src} alt={alt} h={h} />
+      ) : (
+        <span className="text-[7.5px] uppercase tracking-[0.16em] text-neutral-400">{label}</span>
+      )}
+    </div>
+  );
+}
+
+function SectionBar({ index, title }: { index: string; title: string }) {
+  return (
+    <div className="mb-4 mt-2 flex items-center gap-3 border-y-2 border-neutral-900 bg-neutral-900 px-3 py-1.5">
+      <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/70">
+        {index}
+      </span>
+      <span className="doc-serif text-[13px] font-semibold uppercase tracking-[0.14em] text-white">
+        {title}
+      </span>
     </div>
   );
 }
