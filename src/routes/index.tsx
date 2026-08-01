@@ -12,6 +12,8 @@ import {
   PencilLine,
   FileText,
   Zap,
+  Loader2,
+  ALargeSmall,
 } from "lucide-react";
 
 import { toast } from "sonner";
@@ -23,7 +25,15 @@ import { EditorPanel } from "@/components/agreement/EditorPanel";
 import { QuickFillPanel } from "@/components/agreement/QuickFillPanel";
 import { SettingsPanel } from "@/components/agreement/SettingsPanel";
 import { DraftsPanel } from "@/components/agreement/DraftsPanel";
-import { loadDrafts, persistDrafts, upsertAutoDraft, type Draft } from "@/lib/drafts";
+import { ExportConfirmDialog } from "@/components/agreement/ExportConfirmDialog";
+import {
+  loadDrafts,
+  persistDrafts,
+  renameDraft,
+  upsertAutoDraft,
+  type Draft,
+} from "@/lib/drafts";
+import { useThrottledValue } from "@/hooks/use-throttled-value";
 
 
 import { PreviewDocument } from "@/components/agreement/PreviewDocument";
@@ -35,6 +45,7 @@ import { complianceRules } from "@/lib/compliance";
 import { applyInzMapping } from "@/lib/inz-mapping";
 import { scanAgreement } from "@/lib/compliance";
 import { errorCount, type LayoutFingerprint, type LayoutReport } from "@/lib/layout-audit";
+
 import {
   clone,
   defaultAgreement,
@@ -78,6 +89,9 @@ function AgreementEditorPage() {
   const [drafts, setDrafts] = useState<Draft[]>([]);
   const [draftSavedAt, setDraftSavedAt] = useState<string | null>(null);
   const [printTarget, setPrintTarget] = useState<Agreement | null>(null);
+  const [exportOpen, setExportOpen] = useState(false);
+  const [textScale, setTextScale] = useState<"base" | "large" | "xlarge">("base");
+
 
   const [report, setReport] = useState<LayoutReport | null>(null);
   const [baseline, setBaseline] = useState<LayoutFingerprint | null>(null);
@@ -243,8 +257,11 @@ function AgreementEditorPage() {
     toast.success("Version saved", { description: label });
   };
 
-  const shown = printTarget ?? agreement;
+  // Throttle the heavy paginated preview so typing stays smooth.
+  const { value: throttledAgreement, pending: previewPending } = useThrottledValue(agreement, 450);
+  const shown = printTarget ?? throttledAgreement;
   const findings = useMemo(() => scanAgreement(agreement), [agreement]);
+
 
   const confirmAllRules = useCallback(() => {
     setConfirmedRules(complianceRules.map((r) => r.id));
@@ -344,7 +361,10 @@ function AgreementEditorPage() {
           </TabsTrigger>
         </TabsList>
         <TabsContent value="quick" className="mt-5 space-y-6">
-          <QuickFillPanel value={agreement} onChange={update} />
+          <div id="quick-fill-form" role="group" aria-label="Quick fill fields" tabIndex={-1}>
+            <QuickFillPanel value={agreement} onChange={update} />
+          </div>
+
           <DraftsPanel
             drafts={drafts}
             savedAt={draftSavedAt}
@@ -354,6 +374,13 @@ function AgreementEditorPage() {
               toast.success("Draft opened", { description: d.label });
             }}
             onExport={(d) => print(d.data)}
+            onRename={(id, label) =>
+              setDrafts((prev) => {
+                const next = renameDraft(prev, id, label);
+                persistDrafts(next);
+                return next;
+              })
+            }
             onDelete={(id) =>
               setDrafts((prev) => {
                 const next = prev.filter((x) => x.id !== id);
@@ -361,6 +388,7 @@ function AgreementEditorPage() {
                 return next;
               })
             }
+
           />
         </TabsContent>
 
@@ -399,7 +427,25 @@ function AgreementEditorPage() {
   );
 
   const previewColumn = (
-    <div className="preview-scroll lg:h-[calc(100vh-var(--app-header))] lg:overflow-auto">
+    <div
+      id="preview-panel"
+      role="region"
+      aria-label="Live paginated PDF preview"
+      className="preview-scroll relative lg:h-[calc(100vh-var(--app-header))] lg:overflow-auto"
+    >
+      {previewPending && !printTarget ? (
+        <div
+          role="status"
+          aria-live="polite"
+          className="no-print pointer-events-none sticky top-2 z-10 mx-auto flex w-fit items-center gap-1.5 rounded-full border border-border bg-background/95 px-3 py-1 text-[11px] font-medium text-muted-foreground shadow-sm backdrop-blur"
+        >
+          <Loader2 className="size-3.5 animate-spin" aria-hidden="true" /> Preview updating…
+        </div>
+      ) : (
+        <span className="sr-only" role="status" aria-live="polite">
+          Preview up to date
+        </span>
+      )}
       <div className="preview-pad p-3 sm:p-6">
         <PreviewDocument
           agreement={shown}
@@ -410,9 +456,20 @@ function AgreementEditorPage() {
     </div>
   );
 
+
+  const scaleClass =
+    textScale === "large" ? "text-[1.08rem]" : textScale === "xlarge" ? "text-[1.18rem]" : "";
+
   return (
-    <main className="min-h-screen bg-background">
+    <main className={`min-h-dvh bg-background ${scaleClass}`}>
+      <a
+        href="#quick-fill-form"
+        className="no-print sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-50 focus:rounded-md focus:bg-primary focus:px-3 focus:py-2 focus:text-sm focus:text-primary-foreground"
+      >
+        Skip to the Quick fill form
+      </a>
       <header className="no-print sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur">
+
         <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 px-3 py-2.5 sm:gap-3 sm:px-5 sm:py-3">
           <div className="min-w-0">
             <h1 className="doc-serif truncate text-base font-semibold leading-tight sm:text-lg">
@@ -445,6 +502,18 @@ function AgreementEditorPage() {
               </Button>
             </div>
             <Button
+              size="icon"
+              variant="outline"
+              aria-label={`Text size: ${textScale}. Tap to change`}
+              title="Change text size"
+              className="size-11 sm:size-9"
+              onClick={() =>
+                setTextScale((s) => (s === "base" ? "large" : s === "large" ? "xlarge" : "base"))
+              }
+            >
+              <ALargeSmall className="size-4" />
+            </Button>
+            <Button
               variant="outline"
               className="hidden sm:inline-flex"
               onClick={() => setAgreement(clone(defaultAgreement))}
@@ -455,12 +524,12 @@ function AgreementEditorPage() {
               size="icon"
               variant="outline"
               aria-label="Reset document"
-              className="sm:hidden"
+              className="size-11 sm:hidden"
               onClick={() => setAgreement(clone(defaultAgreement))}
             >
               <RotateCcw className="size-4" />
             </Button>
-            <Button className="hidden lg:inline-flex" onClick={() => print(agreement)}>
+            <Button className="hidden lg:inline-flex" onClick={() => setExportOpen(true)}>
               <FileDown className="size-4" /> Export PDF
             </Button>
 
@@ -469,7 +538,11 @@ function AgreementEditorPage() {
       </header>
 
       {/* Mobile: switch between editing and the paginated preview */}
-      <div className="no-print sticky top-[57px] z-20 grid grid-cols-2 border-b border-border bg-background lg:hidden">
+      <div
+        role="tablist"
+        aria-label="Editor and preview"
+        className="no-print sticky top-[57px] z-20 grid grid-cols-2 border-b border-border bg-background lg:hidden"
+      >
         {[
           { id: "edit", label: "Edit", Icon: PencilLine },
           { id: "preview", label: "Preview", Icon: FileText },
@@ -477,26 +550,33 @@ function AgreementEditorPage() {
           <button
             key={id}
             type="button"
+            role="tab"
+            aria-selected={mobileTab === id}
+            aria-controls={id === "edit" ? "editor-panel" : "preview-panel"}
             onClick={() => setMobileTab(id)}
-            className={`flex items-center justify-center gap-1.5 py-2.5 text-sm font-medium transition-colors ${
+            className={`flex min-h-11 items-center justify-center gap-1.5 py-2.5 text-sm font-medium transition-colors ${
               mobileTab === id
                 ? "border-b-2 border-primary text-foreground"
                 : "text-muted-foreground"
             }`}
           >
-            <Icon className="size-4" /> {label}
+            <Icon className="size-4" aria-hidden="true" /> {label}
           </button>
         ))}
       </div>
 
+
       <div className="lg:grid lg:grid-cols-[minmax(0,440px)_minmax(0,1fr)]">
         <section
+          id="editor-panel"
+          aria-label="Agreement editor"
           className={`no-print border-border lg:border-r ${
             mobileTab === "preview" ? "hidden lg:block" : ""
           }`}
         >
           <ScrollArea className="lg:h-[calc(100vh-var(--app-header))]">{editorColumn}</ScrollArea>
         </section>
+
 
         <section
           className={`print-root print-keep bg-muted/50 ${
@@ -544,13 +624,27 @@ function AgreementEditorPage() {
 
       {/* Mobile action bar — one export button, current preview settings */}
       <div className="no-print sticky bottom-0 z-30 border-t border-border bg-background/95 px-3 py-2 backdrop-blur lg:hidden">
-        <Button className="h-12 w-full text-base" onClick={() => print(agreement)}>
+        <Button className="h-12 w-full text-base" onClick={() => setExportOpen(true)}>
           <FileDown className="size-5" /> Export PDF
         </Button>
       </div>
+
+      <ExportConfirmDialog
+        open={exportOpen}
+        onOpenChange={setExportOpen}
+        agreement={agreement}
+        findings={findings}
+        confirmed={confirmedRules}
+        onConfirm={() => {
+          confirmAllRules();
+          setExportOpen(false);
+          print(agreement, true);
+        }}
+      />
     </main>
   );
 }
+
 
 
 
