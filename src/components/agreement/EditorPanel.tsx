@@ -28,12 +28,24 @@ function SectionTitle({ children, action }: { children: string; action?: React.R
 function PartyFields({
   title,
   party,
+  entity,
   onChange,
 }: {
   title: string;
   party: Party;
+  entity?: boolean;
   onChange: (patch: Partial<Party>) => void;
 }) {
+  const field = (label: string, key: keyof Party, placeholder?: string) => (
+    <div className="space-y-1.5">
+      <Label className="text-xs">{label}</Label>
+      <Input
+        value={(party[key] as string) ?? ""}
+        placeholder={placeholder ?? ""}
+        onChange={(e) => onChange({ [key]: e.target.value } as Partial<Party>)}
+      />
+    </div>
+  );
   return (
     <div className="space-y-2.5 rounded-lg border border-border bg-card p-3">
       <div className="text-sm font-semibold">{title}</div>
@@ -42,22 +54,15 @@ function PartyFields({
         value={party.logo}
         onChange={(logo) => onChange({ logo })}
       />
-      <div className="space-y-1.5">
-        <Label className="text-xs">Name</Label>
-        <Input value={party.name} onChange={(e) => onChange({ name: e.target.value })} />
-      </div>
-      <div className="space-y-1.5">
-        <Label className="text-xs">Address</Label>
-        <Input value={party.address} onChange={(e) => onChange({ address: e.target.value })} />
-      </div>
-      <div className="space-y-1.5">
-        <Label className="text-xs">Contact</Label>
-        <Input value={party.contact} onChange={(e) => onChange({ contact: e.target.value })} />
-      </div>
-      <div className="space-y-1.5">
-        <Label className="text-xs">Additional detail</Label>
-        <Input value={party.extra} onChange={(e) => onChange({ extra: e.target.value })} />
-      </div>
+      {field(entity ? "Entity name (as used in the document)" : "Name", "name")}
+      {field(entity ? "Full legal entity name" : "Full legal name", "legalName")}
+      {field(entity ? "NZBN / company number" : "Tax / IRD reference", "registration")}
+      {field(entity ? "Registered address" : "Residential address", "address")}
+      {field("Postal address", "postalAddress", "Optional")}
+      {field("Contact", "contact")}
+      {entity ? field("Website", "website") : null}
+      {field(entity ? "Business activity" : "Designated position", "position")}
+      {field("Additional detail", "extra")}
     </div>
   );
 }
