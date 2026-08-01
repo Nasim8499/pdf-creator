@@ -103,12 +103,31 @@ function compact(items: (FieldChange | null)[]): FieldChange[] {
   return items.filter((x): x is FieldChange => x !== null);
 }
 
+function logoField(prefix: string, before?: string, after?: string): FieldChange | null {
+  const b = before ?? "";
+  const a = after ?? "";
+  if (b === a) return null;
+  const state = (v: string) => (v ? "Logo set" : "No logo");
+  return {
+    key: `${prefix}.logo`,
+    label: "Logo",
+    before: state(b),
+    after: state(a),
+    parts: [
+      { type: "del", text: state(b) },
+      { type: "same", text: " → " },
+      { type: "add", text: b && a ? "Logo replaced" : state(a) },
+    ],
+  };
+}
+
 function partyFields(prefix: string, before: Agreement["employer"], after: Agreement["employer"]) {
   return compact([
     field(`${prefix}.name`, "Name", before.name, after.name),
     field(`${prefix}.address`, "Address", before.address, after.address),
     field(`${prefix}.contact`, "Contact", before.contact, after.contact),
     field(`${prefix}.extra`, "Additional details", before.extra, after.extra),
+    logoField(prefix, before.logo, after.logo),
   ]);
 }
 
