@@ -189,12 +189,12 @@ export function PreviewDocument({
     heights.forEach((h, i) => {
       if (current.length && used + h > PACK_H) {
         const moved: number[] = [];
-        while (current.length > 1 && blocks[current[current.length - 1]]?.keepWithNext) {
+        while (current.length > 1 && blocks[current[current.length - 1] ?? 0]?.keepWithNext) {
           moved.unshift(current.pop() as number);
         }
         next.push(current);
         current = moved;
-        used = moved.reduce((sum, idx) => sum + heights[idx], 0);
+        used = moved.reduce((sum, idx) => sum + (heights[idx] ?? 0), 0);
       }
       current.push(i);
       used += h;
