@@ -187,7 +187,7 @@ export type Version = {
 
 export const uid = () => Math.random().toString(36).slice(2, 10);
 
-export const STORAGE_KEY = "employment-agreement-editor-v3";
+export const STORAGE_KEY = "employment-agreement-editor-v4";
 
 export const defaultSettings: DocSettings = {
   pageSize: "A4",
