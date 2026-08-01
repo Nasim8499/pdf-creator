@@ -272,13 +272,23 @@ function buildBlocks(a: Agreement): Block[] {
       node: <SectionBar index="Part D" title="Execution and signatures" />,
     });
     a.signatures.forEach((s) => {
+      const role = s.role.toLowerCase();
+      const roleLogo = role.includes("employer")
+        ? a.employer.logo
+        : role.includes("employee")
+          ? a.employee.logo
+          : undefined;
       blocks.push({
         id: s.id,
         node: (
-          <div className="mb-4 rounded-md border border-neutral-300 p-4">
-            <div className="mb-3 text-[10.5px] font-semibold uppercase tracking-[0.14em] text-neutral-900">
-              {s.role}
+          <div className="mb-4 border border-neutral-300">
+            <div className="flex items-center justify-between gap-2 border-b border-neutral-300 bg-neutral-100 px-4 py-1.5">
+              <span className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-neutral-900">
+                {s.role}
+              </span>
+              <Logo src={roleLogo} alt={`${s.role} logo`} h={18} />
             </div>
+            <div className="p-4 pt-3">
             <div className="grid grid-cols-2 gap-x-6 gap-y-1">
               <Field label="Name" value={s.name} />
               <Field label="Title" value={s.title} />
