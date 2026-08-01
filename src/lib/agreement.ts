@@ -165,8 +165,11 @@ export type AuditEntry = {
 
 
 export type Agreement = {
+  /** Which agreement template the document body came from. */
+  templateId?: string;
   documentTitle: string;
   subtitle: string;
+
   headerText: string;
   footerText: string;
   /** Prominent notice stating this is a private, non-government record. */
