@@ -14,6 +14,11 @@ export type ComplianceRule = {
   label: string;
   hint: string;
   re: RegExp;
+  /**
+   * "fields" rules are only applied to identity/record-style fields. Clause and
+   * letter prose may lawfully mention agencies (e.g. MBIE mediation services).
+   */
+  scope?: "all" | "fields";
 };
 
 export const complianceRules: ComplianceRule[] = [
@@ -52,6 +57,7 @@ export const complianceRules: ComplianceRule[] = [
     label: "Government agency branding",
     hint: "This document is not issued by or affiliated with any agency.",
     re: /\b(?:immigration\s+new\s+zealand|mbie|ministry\s+of\s+business,?\s+innovation)\b/gi,
+    scope: "fields",
   },
   {
     id: "passport",
@@ -83,10 +89,16 @@ const strip = (html: string) =>
     .replace(/\s+/g, " ")
     .trim();
 
-function scanText(field: string, text: string, out: ComplianceFinding[]) {
+function scanText(
+  field: string,
+  text: string,
+  out: ComplianceFinding[],
+  scope: "all" | "fields" = "fields",
+) {
   const value = (text ?? "").toString();
   if (!value.trim()) return;
   for (const rule of complianceRules) {
+    if ((rule.scope ?? "all") === "fields" && scope === "all") continue;
     rule.re.lastIndex = 0;
     let m: RegExpExecArray | null;
     while ((m = rule.re.exec(value)) !== null) {
@@ -136,14 +148,14 @@ export function scanAgreement(a: Agreement): ComplianceFinding[] {
   if (a.letter?.enabled) {
     scanText("Letter · heading", a.letter.title, out);
     scanText("Letter · salutation", a.letter.salutation, out);
-    scanText("Letter · body", strip(a.letter.html), out);
+    scanText("Letter · body", strip(a.letter.html), out, "all");
     scanText("Letter · sign-off", a.letter.signerName, out);
     scanText("Letter · sign-off", a.letter.signerTitle, out);
   }
 
   a.clauses.forEach((c) => {
-    scanText(`Clause · ${c.heading}`, c.heading, out);
-    scanText(`Clause · ${c.heading}`, strip(c.html), out);
+    scanText(`Clause · ${c.heading}`, c.heading, out, "all");
+    scanText(`Clause · ${c.heading}`, strip(c.html), out, "all");
   });
   a.consents.forEach((c) => scanText(`Consent · ${c.label}`, `${c.label} ${c.text}`, out));
   a.signatures.forEach((s) =>
