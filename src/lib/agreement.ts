@@ -150,6 +150,17 @@ export type DocSettings = {
   showSponsorStrip: boolean;
   sponsorHeading: string;
   sponsorLogo: SponsorLogoSettings;
+  /** Print the compliance audit appendix at the end of the document. */
+  showAppendix: boolean;
+};
+
+/** One entry in the compliance audit trail printed in the appendix. */
+export type AuditEntry = {
+  id: string;
+  at: string;
+  action: "mapped" | "excluded";
+  label: string;
+  detail: string;
 };
 
 
@@ -174,7 +185,8 @@ export type Agreement = {
   signatures: SignatureBlock[];
   consents: Consent[];
   settings: DocSettings;
-
+  /** Record of INZ-labelled inputs that were remapped or removed. */
+  auditTrail?: AuditEntry[];
 };
 
 
@@ -248,6 +260,7 @@ export const defaultSettings: DocSettings = {
     frame: false,
     highlight: true,
   },
+  showAppendix: true,
 };
 
 export const defaultSponsorLogo = defaultSettings.sponsorLogo;
@@ -376,6 +389,7 @@ export function withSettings(doc: Agreement): Agreement {
     references: doc.references ?? clone(defaultAgreement.references),
     referencesNote: doc.referencesNote ?? defaultAgreement.referencesNote,
     letter: { ...clone(defaultAgreement.letter), ...(doc.letter ?? {}) },
+    auditTrail: doc.auditTrail ?? [],
 
     settings: {
       ...defaultSettings,
