@@ -12,7 +12,7 @@ const CONTENT_H = PAGE_H - PAD_TOP - PAD_BOTTOM - HEADER_H - FOOTER_H;
 const CONTENT_PAD_TOP = 20;
 const PACK_H = CONTENT_H - CONTENT_PAD_TOP - 8;
 
-type Block = { id: string; node: ReactNode; keepWithNext?: boolean };
+type Block = { id: string; node: ReactNode; keepWithNext?: boolean; breakBefore?: boolean };
 
 function Field({ label, value }: { label: string; value: string }) {
   return (
@@ -29,7 +29,74 @@ function buildBlocks(a: Agreement): Block[] {
   const blocks: Block[] = [];
 
   blocks.push({
+    id: "cover",
+    node: (
+      <div className="flex h-[880px] flex-col justify-between">
+        <div className="text-[10.5px] uppercase tracking-[0.22em] text-neutral-500">
+          New Zealand · Individual Employment Agreement
+        </div>
+        <div>
+          <div className="mb-5 h-[3px] w-24 bg-neutral-900" />
+          <h1 className="doc-serif text-[42px] font-semibold leading-[1.1] text-neutral-900">
+            {a.documentTitle}
+          </h1>
+          {a.subtitle ? (
+            <p className="mt-4 max-w-[80%] text-[13px] italic leading-relaxed text-neutral-500">
+              {a.subtitle}
+            </p>
+          ) : null}
+          <div className="mt-10 grid grid-cols-2 gap-8 border-t border-neutral-300 pt-6">
+            <div>
+              <div className="text-[10px] uppercase tracking-[0.18em] text-neutral-500">Employer</div>
+              <div className="doc-serif mt-1 text-[16px] font-semibold">{a.employer.name || "—"}</div>
+            </div>
+            <div>
+              <div className="text-[10px] uppercase tracking-[0.18em] text-neutral-500">Employee</div>
+              <div className="doc-serif mt-1 text-[16px] font-semibold">{a.employee.name || "—"}</div>
+            </div>
+            <div>
+              <div className="text-[10px] uppercase tracking-[0.18em] text-neutral-500">Date of agreement</div>
+              <div className="doc-serif mt-1 text-[16px]">{formatDate(a.agreementDate)}</div>
+            </div>
+            <div>
+              <div className="text-[10px] uppercase tracking-[0.18em] text-neutral-500">Commencement</div>
+              <div className="doc-serif mt-1 text-[16px]">{formatDate(a.startDate)}</div>
+            </div>
+          </div>
+        </div>
+        <p className="text-[11px] leading-relaxed text-neutral-500">
+          This document is a private agreement between the parties named above. It is not issued by,
+          and is not affiliated with, any government agency.
+        </p>
+      </div>
+    ),
+  });
+
+  blocks.push({
+    id: "toc",
+    breakBefore: true,
+    node: (
+      <div>
+        <h2 className="doc-serif mb-4 border-b border-neutral-300 pb-2 text-[19px] font-semibold text-neutral-900">
+          Contents
+        </h2>
+        <ol className="columns-2 gap-8 [column-fill:balance]">
+          {a.clauses.map((c) => (
+            <li
+              key={c.id}
+              className="mb-[5px] break-inside-avoid text-[11.5px] leading-snug text-neutral-700"
+            >
+              {c.heading}
+            </li>
+          ))}
+        </ol>
+      </div>
+    ),
+  });
+
+  blocks.push({
     id: "title",
+    breakBefore: true,
     node: (
       <div className="mb-6 border-b-2 border-neutral-900 pb-4">
         <h1 className="doc-serif text-[26px] font-semibold leading-tight text-neutral-900">
@@ -83,12 +150,12 @@ function buildBlocks(a: Agreement): Block[] {
     blocks.push({
       id: c.id,
       node: (
-        <section className="mb-5">
-          <h2 className="doc-serif mb-1.5 text-[15px] font-semibold text-neutral-900">
+        <section className="mb-6">
+          <h2 className="doc-serif mb-2 text-[15.5px] font-semibold text-neutral-900">
             {c.heading}
           </h2>
           <div
-            className="doc-prose text-[12.5px] leading-[1.7] text-neutral-800"
+            className="doc-prose text-[13px] leading-[1.85] text-neutral-800"
             dangerouslySetInnerHTML={{ __html: c.html }}
           />
         </section>
@@ -134,6 +201,7 @@ function buildBlocks(a: Agreement): Block[] {
     blocks.push({
       id: "sign-head",
       keepWithNext: true,
+      breakBefore: true,
       node: (
         <h2 className="doc-serif mb-3 mt-6 text-[15px] font-semibold text-neutral-900">
           Signatures
@@ -187,6 +255,11 @@ export function PreviewDocument({
     let current: number[] = [];
     let used = 0;
     heights.forEach((h, i) => {
+      if (current.length && blocks[i]?.breakBefore) {
+        next.push(current);
+        current = [];
+        used = 0;
+      }
       if (current.length && used + h > PACK_H) {
         const moved: number[] = [];
         while (current.length > 1 && blocks[current[current.length - 1] ?? 0]?.keepWithNext) {
