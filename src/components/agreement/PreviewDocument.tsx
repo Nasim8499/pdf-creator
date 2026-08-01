@@ -276,6 +276,75 @@ function VerifyMark({ t, s, inline }: { t: DocTheme; s: DocSettings; inline?: bo
   );
 }
 
+function ParticularsCard({
+  title,
+  p,
+  t,
+  s,
+  entity,
+}: {
+  title: string;
+  p: Party;
+  t: DocTheme;
+  s: DocSettings;
+  entity?: boolean;
+}) {
+  const rows: Array<[string, string]> = entity
+    ? [
+        ["Entity name", p.legalName || p.name],
+        ["Trading name", p.name],
+        ["NZBN / company no.", p.registration ?? ""],
+        ["Registered address", p.address],
+        ["Postal address", p.postalAddress ?? ""],
+        ["Contact", p.contact],
+        ["Website", p.website ?? ""],
+        ["Business activity", p.position ?? ""],
+        ["Additional detail", p.extra],
+      ]
+    : [
+        ["Full legal name", p.legalName || p.name],
+        ["Known as", p.name],
+        ["Residential address", p.address],
+        ["Postal address", p.postalAddress ?? ""],
+        ["Contact", p.contact],
+        ["Tax / IRD reference", p.registration ?? ""],
+        ["Designated position", p.position ?? ""],
+        ["Additional detail", p.extra],
+      ];
+  return (
+    <div style={{ border: `1px solid ${t.chromeRule}` }}>
+      <div
+        className="flex items-center justify-between gap-2 px-3 py-1.5"
+        style={{ background: t.surface, borderBottom: `1px solid ${t.chromeRule}` }}
+      >
+        <span className="text-[10.5px] font-semibold uppercase tracking-[0.14em]" style={{ color: t.ink }}>
+          {title}
+        </span>
+        <Logo src={p.logo} alt={`${title} logo`} h={18} s={s.logo} />
+      </div>
+      <table className="w-full border-collapse text-[11.5px]">
+        <tbody>
+          {rows
+            .filter(([, v]) => (v ?? "").trim().length > 0)
+            .map(([k, v]) => (
+              <tr key={k} style={{ borderBottom: `1px solid ${t.chromeRule}` }}>
+                <th
+                  className="w-[42%] px-2.5 py-1.5 text-left align-top text-[10px] font-medium uppercase tracking-wide"
+                  style={{ color: t.muted, borderRight: `1px solid ${t.chromeRule}` }}
+                >
+                  {k}
+                </th>
+                <td className="px-2.5 py-1.5 align-top leading-snug" style={{ color: t.body }}>
+                  {v}
+                </td>
+              </tr>
+            ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 function PartyCard({ title, p, t, s }: { title: string; p: Party; t: DocTheme; s: DocSettings }) {
   return (
     <div style={{ border: `1px solid ${t.chromeRule}` }}>
