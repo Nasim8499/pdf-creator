@@ -89,6 +89,9 @@ function AgreementEditorPage() {
   const [drafts, setDrafts] = useState<Draft[]>([]);
   const [draftSavedAt, setDraftSavedAt] = useState<string | null>(null);
   const [printTarget, setPrintTarget] = useState<Agreement | null>(null);
+  const [exportOpen, setExportOpen] = useState(false);
+  const [textScale, setTextScale] = useState<"base" | "large" | "xlarge">("base");
+
 
   const [report, setReport] = useState<LayoutReport | null>(null);
   const [baseline, setBaseline] = useState<LayoutFingerprint | null>(null);
