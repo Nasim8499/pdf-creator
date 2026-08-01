@@ -11,14 +11,18 @@ import {
   Settings2,
   PencilLine,
   FileText,
+  Zap,
 } from "lucide-react";
+
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EditorPanel } from "@/components/agreement/EditorPanel";
+import { QuickFillPanel } from "@/components/agreement/QuickFillPanel";
 import { SettingsPanel } from "@/components/agreement/SettingsPanel";
+
 import { PreviewDocument } from "@/components/agreement/PreviewDocument";
 import { VersionDiffDialog } from "@/components/agreement/VersionDiffDialog";
 import { LayoutAuditPanel } from "@/components/agreement/LayoutAuditPanel";
@@ -250,18 +254,25 @@ function AgreementEditorPage() {
         )}
       </div>
 
-      <Tabs defaultValue="content">
+      <Tabs defaultValue="quick">
         <TabsList className="w-full">
+          <TabsTrigger value="quick" className="flex-1">
+            <Zap className="size-3.5" /> Quick fill
+          </TabsTrigger>
           <TabsTrigger value="content" className="flex-1">
             <PencilLine className="size-3.5" /> Content
           </TabsTrigger>
           <TabsTrigger value="design" className="flex-1">
-            <Settings2 className="size-3.5" /> Design &amp; export
+            <Settings2 className="size-3.5" /> Design
           </TabsTrigger>
         </TabsList>
+        <TabsContent value="quick" className="mt-5">
+          <QuickFillPanel value={agreement} onChange={update} />
+        </TabsContent>
         <TabsContent value="content" className="mt-5">
           <EditorPanel value={agreement} onChange={update} />
         </TabsContent>
+
         <TabsContent value="design" className="mt-5 space-y-8">
           <CompliancePanel findings={findings} />
           <LayoutAuditPanel
