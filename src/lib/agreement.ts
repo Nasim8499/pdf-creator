@@ -308,6 +308,8 @@ export function withSettings(doc: Agreement): Agreement {
       ...s,
       logo: { ...defaultSettings.logo, ...(s.logo ?? {}) },
       codes: { ...defaultSettings.codes, ...(s.codes ?? {}) },
+      sponsorLogo: { ...defaultSettings.sponsorLogo, ...(s.sponsorLogo ?? {}) },
+
       sponsors: s.sponsors ?? [],
     },
   };
