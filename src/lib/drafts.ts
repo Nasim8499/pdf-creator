@@ -7,6 +7,9 @@ export type Draft = {
   savedAt: string;
   /** Set when the user renames a draft — autosave then stops re-labelling it. */
   renamed?: boolean;
+  /** Stable party-pairing key used by autosave to find the matching entry. */
+  autoKey?: string;
+
   data: Agreement;
 };
 
