@@ -75,7 +75,10 @@ function AgreementEditorPage() {
   const [confirmedRules, setConfirmedRules] = useState<string[]>([]);
   const [zoom, setZoom] = useState(0.62);
   const [mobileTab, setMobileTab] = useState("edit");
+  const [drafts, setDrafts] = useState<Draft[]>([]);
+  const [draftSavedAt, setDraftSavedAt] = useState<string | null>(null);
   const [printTarget, setPrintTarget] = useState<Agreement | null>(null);
+
   const [report, setReport] = useState<LayoutReport | null>(null);
   const [baseline, setBaseline] = useState<LayoutFingerprint | null>(null);
   const [baselineAt, setBaselineAt] = useState<string | null>(null);
