@@ -145,9 +145,18 @@
 }
 
 /* ---- Document editor typography & print ---- */
+:root {
+  --app-header: 65px;
+}
+
 .doc-serif {
   font-family: "Source Serif 4", Georgia, "Times New Roman", serif;
 }
+
+.doc-sans {
+  font-family: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+}
+
 
 .doc-prose p {
   margin-bottom: 0.6em;
