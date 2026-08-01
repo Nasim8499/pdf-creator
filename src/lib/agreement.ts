@@ -1,4 +1,6 @@
 import { nzClauses } from "./nz-clauses";
+import type { PageSizeName, ThemeName } from "./doc-theme";
+
 
 export type Clause = {
   id: string;
@@ -33,6 +35,67 @@ export type Party = {
   logo?: string | undefined;
 };
 
+export type LogoFit = "contain" | "cover";
+export type LogoAlign = "left" | "center" | "right";
+
+export type LogoSettings = {
+  headerHeight: number;
+  footerHeight: number;
+  coverHeight: number;
+  fit: LogoFit;
+  align: LogoAlign;
+  offsetX: number;
+  offsetY: number;
+  showInHeader: boolean;
+  showInFooter: boolean;
+  showOnCover: boolean;
+  showInSignatures: boolean;
+  frame: boolean;
+};
+
+export type Sponsor = {
+  id: string;
+  name: string;
+  tagline: string;
+  logo?: string | undefined;
+};
+
+export type CodeMarkSettings = {
+  enabled: boolean;
+  type: "qr" | "barcode";
+  value: string;
+  caption: string;
+  onCover: boolean;
+  onEveryPage: boolean;
+  inSignatures: boolean;
+  size: number;
+};
+
+export type DocSettings = {
+  pageSize: PageSizeName;
+  marginX: number;
+  marginY: number;
+  showHeader: boolean;
+  showFooter: boolean;
+  showPageNumbers: boolean;
+  showCover: boolean;
+  showContents: boolean;
+  /** Space below a Part band, in px. */
+  sectionSpacing: number;
+  /** Space between clauses, in px. */
+  clauseSpacing: number;
+  /** Force each Part A–D band onto a fresh page. */
+  strictBreaks: boolean;
+  /** Show 01, 02 … numbers beside clause headings. */
+  numberClauses: boolean;
+  theme: ThemeName;
+  logo: LogoSettings;
+  codes: CodeMarkSettings;
+  sponsors: Sponsor[];
+  showSponsorStrip: boolean;
+  sponsorHeading: string;
+};
+
 export type Agreement = {
   documentTitle: string;
   subtitle: string;
@@ -46,7 +109,9 @@ export type Agreement = {
   clauses: Clause[];
   signatures: SignatureBlock[];
   consents: Consent[];
+  settings: DocSettings;
 };
+
 
 export type Version = {
   id: string;
@@ -57,9 +122,55 @@ export type Version = {
 
 export const uid = () => Math.random().toString(36).slice(2, 10);
 
-export const STORAGE_KEY = "employment-agreement-editor-v2";
+export const STORAGE_KEY = "employment-agreement-editor-v3";
+
+export const defaultSettings: DocSettings = {
+  pageSize: "A4",
+  marginX: 64,
+  marginY: 56,
+  showHeader: true,
+  showFooter: true,
+  showPageNumbers: true,
+  showCover: true,
+  showContents: true,
+  sectionSpacing: 18,
+  clauseSpacing: 20,
+  strictBreaks: true,
+  numberClauses: true,
+  theme: "nz-official",
+  logo: {
+    headerHeight: 24,
+    footerHeight: 14,
+    coverHeight: 44,
+    fit: "contain",
+    align: "left",
+    offsetX: 0,
+    offsetY: 0,
+    showInHeader: true,
+    showInFooter: true,
+    showOnCover: true,
+    showInSignatures: true,
+    frame: true,
+  },
+  codes: {
+    enabled: true,
+    type: "qr",
+    value: "https://example.com/agreements/verify/AGR-000-000",
+    caption: "Scan to verify this document reference",
+    onCover: true,
+    onEveryPage: false,
+    inSignatures: true,
+    size: 72,
+  },
+  sponsors: [],
+  showSponsorStrip: false,
+  sponsorHeading: "Supported by",
+};
 
 export const defaultAgreement: Agreement = {
+  settings: JSON.parse(JSON.stringify(defaultSettings)) as DocSettings,
+
+
   documentTitle: "Individual Employment Agreement",
   subtitle: "New Zealand format — neutral template, not an official or government-issued document",
   headerText: "Individual Employment Agreement — New Zealand",
@@ -138,6 +249,21 @@ export function formatDate(value: string) {
 
 type Stored = { current: Agreement; versions: Version[] };
 
+/** Fills in settings introduced after a document was saved. */
+export function withSettings(doc: Agreement): Agreement {
+  const s = (doc.settings ?? {}) as Partial<DocSettings>;
+  return {
+    ...doc,
+    settings: {
+      ...defaultSettings,
+      ...s,
+      logo: { ...defaultSettings.logo, ...(s.logo ?? {}) },
+      codes: { ...defaultSettings.codes, ...(s.codes ?? {}) },
+      sponsors: s.sponsors ?? [],
+    },
+  };
+}
+
 export function loadStored(): Stored | null {
   if (typeof window === "undefined") return null;
   try {
@@ -145,11 +271,15 @@ export function loadStored(): Stored | null {
     if (!raw) return null;
     const parsed = JSON.parse(raw) as Stored;
     if (!parsed?.current) return null;
-    return { current: parsed.current, versions: parsed.versions ?? [] };
+    return {
+      current: withSettings(parsed.current),
+      versions: (parsed.versions ?? []).map((v) => ({ ...v, data: withSettings(v.data) })),
+    };
   } catch {
     return null;
   }
 }
+
 
 export function saveStored(current: Agreement, versions: Version[]) {
   if (typeof window === "undefined") return;
