@@ -180,7 +180,8 @@ export function EditorPanel({ value, onChange }: Props) {
                 disabled={index === 0}
                 onClick={() => {
                   const next = [...value.clauses];
-                  [next[index - 1], next[index]] = [next[index], next[index - 1]];
+                  const moved = next.splice(index, 1)[0];
+                  if (moved) next.splice(index - 1, 0, moved);
                   set({ clauses: next });
                 }}
               >
@@ -193,7 +194,8 @@ export function EditorPanel({ value, onChange }: Props) {
                 disabled={index === value.clauses.length - 1}
                 onClick={() => {
                   const next = [...value.clauses];
-                  [next[index + 1], next[index]] = [next[index], next[index + 1]];
+                  const moved = next.splice(index, 1)[0];
+                  if (moved) next.splice(index + 1, 0, moved);
                   set({ clauses: next });
                 }}
               >
