@@ -1,13 +1,26 @@
-import { Plus, Trash2, Zap } from "lucide-react";
+import { Plus, Trash2, Zap, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { complianceRules } from "@/lib/compliance";
 import { uid, type Agreement, type Party } from "@/lib/agreement";
 
 type Props = {
   value: Agreement;
   onChange: (updater: (prev: Agreement) => Agreement) => void;
 };
+
+/** Inline screen: returns the first blocked rule matched by this input. */
+export function checkFieldText(text: string) {
+  if (!text.trim()) return null;
+  for (const rule of complianceRules) {
+    rule.re.lastIndex = 0;
+    if (rule.re.test(text)) return rule;
+  }
+  return null;
+}
+
+const inputClass = "h-11 text-base sm:h-9 sm:text-sm";
 
 function Field({
   id,
@@ -24,6 +37,7 @@ function Field({
   placeholder?: string;
   type?: string;
 }) {
+  const issue = checkFieldText(value);
   return (
     <div className="space-y-1.5">
       <Label htmlFor={id} className="text-xs text-muted-foreground">
@@ -34,8 +48,19 @@ function Field({
         type={type}
         value={value}
         placeholder={placeholder ?? ""}
+        aria-invalid={issue ? true : undefined}
+        className={`${inputClass} ${issue ? "border-destructive focus-visible:ring-destructive/40" : ""}`}
         onChange={(e) => onChange(e.target.value)}
       />
+      {issue ? (
+        <p className="flex items-start gap-1.5 text-[11px] leading-snug text-destructive">
+          <AlertTriangle className="mt-px size-3.5 shrink-0" />
+          <span>
+            <strong className="font-semibold">{issue.label}</strong> — {issue.hint} Export is
+            blocked while this stays here.
+          </span>
+        </p>
+      ) : null}
     </div>
   );
 }
@@ -52,7 +77,7 @@ function PartyQuickFields({
   const k = who.toLowerCase();
   const isEmployer = who === "Employer";
   return (
-    <section className="space-y-3 rounded-lg border border-border bg-card p-3">
+    <section className="space-y-3 rounded-lg border border-border bg-card p-3 sm:p-4">
       <h3 className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
         {who}
       </h3>
@@ -131,7 +156,7 @@ export function QuickFillPanel({ value, onChange }: Props) {
           Change only the details that vary per agreement — parties, dates and your own file or
           application reference numbers. The clause text and layout stay exactly as they are.
           Reference numbers here are party-supplied; agency-issued IDs, visa statuses and
-          accreditation portals are blocked from the export.
+          accreditation portals are flagged inline and blocked from the export.
         </p>
       </div>
 
@@ -146,7 +171,7 @@ export function QuickFillPanel({ value, onChange }: Props) {
         onPatch={(p) => patchParty("employee", p)}
       />
 
-      <section className="space-y-3 rounded-lg border border-border bg-card p-3">
+      <section className="space-y-3 rounded-lg border border-border bg-card p-3 sm:p-4">
         <h3 className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
           Dates
         </h3>
@@ -175,7 +200,7 @@ export function QuickFillPanel({ value, onChange }: Props) {
         </div>
       </section>
 
-      <section className="space-y-3 rounded-lg border border-border bg-card p-3">
+      <section className="space-y-3 rounded-lg border border-border bg-card p-3 sm:p-4">
         <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
           <h3 className="min-w-0 truncate text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
             Reference details — party-supplied
@@ -183,7 +208,7 @@ export function QuickFillPanel({ value, onChange }: Props) {
           <Button
             size="sm"
             variant="outline"
-            className="shrink-0"
+            className="h-10 shrink-0 sm:h-8"
             onClick={() =>
               onChange((prev) => ({
                 ...prev,
@@ -198,53 +223,64 @@ export function QuickFillPanel({ value, onChange }: Props) {
           Your own file, offer or application numbers. These carry no status with any government
           agency.
         </p>
-        <div className="space-y-2">
-          {(value.references ?? []).map((r) => (
-            <div
-              key={r.id}
-              className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]"
-            >
-              <Input
-                value={r.label}
-                placeholder="Label (e.g. Employer file no.)"
-                onChange={(e) =>
-                  onChange((prev) => ({
-                    ...prev,
-                    references: prev.references.map((x) =>
-                      x.id === r.id ? { ...x, label: e.target.value } : x,
-                    ),
-                  }))
-                }
-              />
-              <Input
-                value={r.value}
-                placeholder="Number"
-                className="col-span-2 sm:col-span-1"
-                onChange={(e) =>
-                  onChange((prev) => ({
-                    ...prev,
-                    references: prev.references.map((x) =>
-                      x.id === r.id ? { ...x, value: e.target.value } : x,
-                    ),
-                  }))
-                }
-              />
-              <Button
-                size="icon"
-                variant="ghost"
-                aria-label="Remove reference"
-                className="shrink-0"
-                onClick={() =>
-                  onChange((prev) => ({
-                    ...prev,
-                    references: prev.references.filter((x) => x.id !== r.id),
-                  }))
-                }
-              >
-                <Trash2 className="size-4 text-destructive" />
-              </Button>
-            </div>
-          ))}
+        <div className="space-y-3">
+          {(value.references ?? []).map((r) => {
+            const issue = checkFieldText(`${r.label} ${r.value}`);
+            return (
+              <div key={r.id} className="space-y-1.5">
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
+                  <Input
+                    value={r.label}
+                    placeholder="Label (e.g. Employer file no.)"
+                    className={`${inputClass} ${issue ? "border-destructive" : ""}`}
+                    onChange={(e) =>
+                      onChange((prev) => ({
+                        ...prev,
+                        references: prev.references.map((x) =>
+                          x.id === r.id ? { ...x, label: e.target.value } : x,
+                        ),
+                      }))
+                    }
+                  />
+                  <Input
+                    value={r.value}
+                    placeholder="Number"
+                    className={`col-span-2 sm:col-span-1 ${inputClass} ${issue ? "border-destructive" : ""}`}
+                    onChange={(e) =>
+                      onChange((prev) => ({
+                        ...prev,
+                        references: prev.references.map((x) =>
+                          x.id === r.id ? { ...x, value: e.target.value } : x,
+                        ),
+                      }))
+                    }
+                  />
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    aria-label="Remove reference"
+                    className="size-11 shrink-0 sm:size-9"
+                    onClick={() =>
+                      onChange((prev) => ({
+                        ...prev,
+                        references: prev.references.filter((x) => x.id !== r.id),
+                      }))
+                    }
+                  >
+                    <Trash2 className="size-4 text-destructive" />
+                  </Button>
+                </div>
+                {issue ? (
+                  <p className="flex items-start gap-1.5 text-[11px] leading-snug text-destructive">
+                    <AlertTriangle className="mt-px size-3.5 shrink-0" />
+                    <span>
+                      <strong className="font-semibold">{issue.label}</strong> — {issue.hint}
+                    </span>
+                  </p>
+                ) : null}
+              </div>
+            );
+          })}
           {(value.references ?? []).length === 0 ? (
             <p className="text-xs text-muted-foreground">No reference numbers yet.</p>
           ) : null}

@@ -22,6 +22,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EditorPanel } from "@/components/agreement/EditorPanel";
 import { QuickFillPanel } from "@/components/agreement/QuickFillPanel";
 import { SettingsPanel } from "@/components/agreement/SettingsPanel";
+import { DraftsPanel } from "@/components/agreement/DraftsPanel";
+import { loadDrafts, persistDrafts, upsertAutoDraft, type Draft } from "@/lib/drafts";
+
 
 import { PreviewDocument } from "@/components/agreement/PreviewDocument";
 import { VersionDiffDialog } from "@/components/agreement/VersionDiffDialog";
@@ -72,7 +75,10 @@ function AgreementEditorPage() {
   const [confirmedRules, setConfirmedRules] = useState<string[]>([]);
   const [zoom, setZoom] = useState(0.62);
   const [mobileTab, setMobileTab] = useState("edit");
+  const [drafts, setDrafts] = useState<Draft[]>([]);
+  const [draftSavedAt, setDraftSavedAt] = useState<string | null>(null);
   const [printTarget, setPrintTarget] = useState<Agreement | null>(null);
+
   const [report, setReport] = useState<LayoutReport | null>(null);
   const [baseline, setBaseline] = useState<LayoutFingerprint | null>(null);
   const [baselineAt, setBaselineAt] = useState<string | null>(null);
@@ -134,11 +140,32 @@ function AgreementEditorPage() {
     }
   }, []);
 
-
   useEffect(() => {
     if (!hydrated.current) return;
     saveStored(agreement, versions);
   }, [agreement, versions]);
+
+  // Hydrate the drafts list once.
+  useEffect(() => {
+    setDrafts(loadDrafts());
+  }, []);
+
+  const saveDraftNow = useCallback(() => {
+    setDrafts((prev) => {
+      const next = upsertAutoDraft(prev, agreement);
+      persistDrafts(next);
+      return next;
+    });
+    setDraftSavedAt(new Date().toISOString());
+  }, [agreement]);
+
+  // Autosave the Quick fill fields shortly after typing stops.
+  useEffect(() => {
+    if (!hydrated.current) return;
+    const t = window.setTimeout(() => saveDraftNow(), 1200);
+    return () => window.clearTimeout(t);
+  }, [agreement, saveDraftNow]);
+
 
   const update = useCallback((updater: (prev: Agreement) => Agreement) => {
     setAgreement((prev) => updater(prev));
@@ -316,9 +343,27 @@ function AgreementEditorPage() {
             <Settings2 className="size-3.5" /> Design
           </TabsTrigger>
         </TabsList>
-        <TabsContent value="quick" className="mt-5">
+        <TabsContent value="quick" className="mt-5 space-y-6">
           <QuickFillPanel value={agreement} onChange={update} />
+          <DraftsPanel
+            drafts={drafts}
+            savedAt={draftSavedAt}
+            onSaveNow={saveDraftNow}
+            onOpen={(d) => {
+              setAgreement(clone(d.data));
+              toast.success("Draft opened", { description: d.label });
+            }}
+            onExport={(d) => print(d.data)}
+            onDelete={(id) =>
+              setDrafts((prev) => {
+                const next = prev.filter((x) => x.id !== id);
+                persistDrafts(next);
+                return next;
+              })
+            }
+          />
         </TabsContent>
+
         <TabsContent value="content" className="mt-5">
           <EditorPanel value={agreement} onChange={update} />
         </TabsContent>
@@ -415,10 +460,10 @@ function AgreementEditorPage() {
             >
               <RotateCcw className="size-4" />
             </Button>
-            <Button onClick={() => print(agreement)}>
-              <FileDown className="size-4" />
-              <span className="hidden sm:inline">Export PDF</span>
+            <Button className="hidden lg:inline-flex" onClick={() => print(agreement)}>
+              <FileDown className="size-4" /> Export PDF
             </Button>
+
           </div>
         </div>
       </header>
@@ -463,6 +508,7 @@ function AgreementEditorPage() {
               size="icon"
               variant="ghost"
               aria-label="Zoom out"
+              className="size-11"
               onClick={() => setZoom((z) => Math.max(0.25, +(z - 0.06).toFixed(2)))}
             >
               <ZoomOut className="size-4" />
@@ -474,16 +520,37 @@ function AgreementEditorPage() {
               size="icon"
               variant="ghost"
               aria-label="Zoom in"
+              className="size-11"
               onClick={() => setZoom((z) => Math.min(1.4, +(z + 0.06).toFixed(2)))}
             >
               <ZoomIn className="size-4" />
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="ml-2 h-9"
+              onClick={() =>
+                setZoom(
+                  Math.max(0.25, +(((window.innerWidth - 28) / 794).toFixed(2))),
+                )
+              }
+            >
+              Fit width
             </Button>
           </div>
           {previewColumn}
         </section>
       </div>
+
+      {/* Mobile action bar — one export button, current preview settings */}
+      <div className="no-print sticky bottom-0 z-30 border-t border-border bg-background/95 px-3 py-2 backdrop-blur lg:hidden">
+        <Button className="h-12 w-full text-base" onClick={() => print(agreement)}>
+          <FileDown className="size-5" /> Export PDF
+        </Button>
+      </div>
     </main>
   );
 }
+
 
 
