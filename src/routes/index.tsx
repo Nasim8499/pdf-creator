@@ -257,8 +257,11 @@ function AgreementEditorPage() {
     toast.success("Version saved", { description: label });
   };
 
-  const shown = printTarget ?? agreement;
+  // Throttle the heavy paginated preview so typing stays smooth.
+  const { value: throttledAgreement, pending: previewPending } = useThrottledValue(agreement, 450);
+  const shown = printTarget ?? throttledAgreement;
   const findings = useMemo(() => scanAgreement(agreement), [agreement]);
+
 
   const confirmAllRules = useCallback(() => {
     setConfirmedRules(complianceRules.map((r) => r.id));
@@ -368,6 +371,13 @@ function AgreementEditorPage() {
               toast.success("Draft opened", { description: d.label });
             }}
             onExport={(d) => print(d.data)}
+            onRename={(id, label) =>
+              setDrafts((prev) => {
+                const next = renameDraft(prev, id, label);
+                persistDrafts(next);
+                return next;
+              })
+            }
             onDelete={(id) =>
               setDrafts((prev) => {
                 const next = prev.filter((x) => x.id !== id);
@@ -375,6 +385,7 @@ function AgreementEditorPage() {
                 return next;
               })
             }
+
           />
         </TabsContent>
 
