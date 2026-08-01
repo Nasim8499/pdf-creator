@@ -237,11 +237,8 @@ function buildBlocks(a: Agreement): Block[] {
     blocks.push({
       id: "consents-head",
       keepWithNext: true,
-      node: (
-        <h2 className="doc-serif mb-2 mt-2 text-[15px] font-semibold text-neutral-900">
-          Acknowledgements and Consents
-        </h2>
-      ),
+      breakBefore: true,
+      node: <SectionBar index="Part C" title="Acknowledgements and consents" />,
     });
     a.consents.forEach((c) => {
       blocks.push({
@@ -272,11 +269,7 @@ function buildBlocks(a: Agreement): Block[] {
       id: "sign-head",
       keepWithNext: true,
       breakBefore: true,
-      node: (
-        <h2 className="doc-serif mb-3 mt-6 text-[15px] font-semibold text-neutral-900">
-          Signatures
-        </h2>
-      ),
+      node: <SectionBar index="Part D" title="Execution and signatures" />,
     });
     a.signatures.forEach((s) => {
       blocks.push({
