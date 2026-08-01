@@ -31,9 +31,38 @@ export type Party = {
   address: string;
   contact: string;
   extra: string;
+  /** Full legal name as it should appear on the agreement. */
+  legalName?: string;
+  /** NZBN / company number for an entity, or IRD-style reference for a person. */
+  registration?: string;
+  /** Postal address, if different from the physical address. */
+  postalAddress?: string;
+  website?: string;
+  /** Designated position (employee) or business activity (employer). */
+  position?: string;
   /** Data URL of an uploaded logo, shown on the cover, page headers and footers. */
   logo?: string | undefined;
 };
+
+/** Party-supplied internal file or reference number. Never an agency-issued ID. */
+export type ReferenceItem = {
+  id: string;
+  label: string;
+  value: string;
+};
+
+/** Optional covering letter printed ahead of the agreement. */
+export type LetterSettings = {
+  enabled: boolean;
+  title: string;
+  reference: string;
+  salutation: string;
+  html: string;
+  signOff: string;
+  signerName: string;
+  signerTitle: string;
+};
+
 
 export type LogoFit = "contain" | "cover";
 export type LogoAlign = "left" | "center" | "right";
