@@ -644,6 +644,48 @@ function drawCover(page: PDFPage, a: Agreement, fonts: Fonts, pal: Palette) {
     page.drawText(val, { x: cx + 10, y: cy - 36, size: 11, font: fonts.serifBold, color: pal.ink });
   });
 
+  /* At a glance — key terms, so the cover carries real information */
+  let gy = y - 2 * 62 - 14;
+  page.drawText("AT A GLANCE", {
+    x,
+    y: gy,
+    size: 7.5,
+    font: fonts.sansBold,
+    color: pal.accent,
+  });
+  page.drawRectangle({ x, y: gy - 8, width: CONTENT_W - 22, height: 0.8, color: pal.rule });
+  gy -= 24;
+  const ref = a.references?.[0];
+  const glance: Array<[string, string]> = [
+    ["Position", a.employee.position || "As recorded in Schedule 1"],
+    ["Agreement type", a.headerText || a.documentTitle],
+    ["Employer contact", a.employer.contact || "-"],
+    ["Employee contact", a.employee.contact || "-"],
+    ["Term", a.endDate ? `${formatDate(a.startDate)} to ${formatDate(a.endDate)}` : "Ongoing, from commencement"],
+    ...(ref ? ([[ref.label || "Reference", ref.value || "-"]] as Array<[string, string]>) : []),
+  ];
+  for (const [k, v] of glance) {
+    if (gy < 170) break;
+    page.drawText(ascii(k).toUpperCase(), {
+      x,
+      y: gy,
+      size: 7,
+      font: fonts.sansBold,
+      color: pal.muted,
+    });
+    const val = wrap(v, fonts.serif, 9.5, CONTENT_W - 180)[0] ?? "-";
+    page.drawText(val, { x: x + 130, y: gy, size: 9.5, font: fonts.serif, color: pal.ink });
+    page.drawRectangle({
+      x,
+      y: gy - 7,
+      width: CONTENT_W - 22,
+      height: 0.4,
+      color: pal.rule,
+    });
+    gy -= 20;
+  }
+
+
   /* Footer notice */
   const notice = wrap(a.noticeText, fonts.sans, 7.6, CONTENT_W - 40).slice(0, 4);
   let ny = 132;
