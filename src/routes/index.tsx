@@ -454,9 +454,19 @@ function AgreementEditorPage() {
   );
 
 
+  const scaleClass =
+    textScale === "large" ? "text-[1.08rem]" : textScale === "xlarge" ? "text-[1.18rem]" : "";
+
   return (
-    <main className="min-h-screen bg-background">
+    <main className={`min-h-dvh bg-background ${scaleClass}`}>
+      <a
+        href="#quick-fill-form"
+        className="no-print sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-50 focus:rounded-md focus:bg-primary focus:px-3 focus:py-2 focus:text-sm focus:text-primary-foreground"
+      >
+        Skip to the Quick fill form
+      </a>
       <header className="no-print sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur">
+
         <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 px-3 py-2.5 sm:gap-3 sm:px-5 sm:py-3">
           <div className="min-w-0">
             <h1 className="doc-serif truncate text-base font-semibold leading-tight sm:text-lg">
