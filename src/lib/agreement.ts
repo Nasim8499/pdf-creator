@@ -122,9 +122,54 @@ export type Version = {
 
 export const uid = () => Math.random().toString(36).slice(2, 10);
 
-export const STORAGE_KEY = "employment-agreement-editor-v2";
+export const STORAGE_KEY = "employment-agreement-editor-v3";
+
+export const defaultSettings: DocSettings = {
+  pageSize: "A4",
+  marginX: 64,
+  marginY: 56,
+  showHeader: true,
+  showFooter: true,
+  showPageNumbers: true,
+  showCover: true,
+  showContents: true,
+  sectionSpacing: 18,
+  clauseSpacing: 20,
+  strictBreaks: true,
+  numberClauses: true,
+  theme: "nz-official",
+  logo: {
+    headerHeight: 24,
+    footerHeight: 14,
+    coverHeight: 44,
+    fit: "contain",
+    align: "left",
+    offsetX: 0,
+    offsetY: 0,
+    showInHeader: true,
+    showInFooter: true,
+    showOnCover: true,
+    showInSignatures: true,
+    frame: true,
+  },
+  codes: {
+    enabled: true,
+    type: "qr",
+    value: "https://example.com/agreements/verify/AGR-000-000",
+    caption: "Scan to verify this document reference",
+    onCover: true,
+    onEveryPage: false,
+    inSignatures: true,
+    size: 72,
+  },
+  sponsors: [],
+  showSponsorStrip: false,
+  sponsorHeading: "Supported by",
+};
 
 export const defaultAgreement: Agreement = {
+  settings: clone0(defaultSettings),
+
   documentTitle: "Individual Employment Agreement",
   subtitle: "New Zealand format — neutral template, not an official or government-issued document",
   headerText: "Individual Employment Agreement — New Zealand",
