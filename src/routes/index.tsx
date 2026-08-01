@@ -59,6 +59,7 @@ function AgreementEditorPage() {
   const [versions, setVersions] = useState<Version[]>([]);
   const [versionLabel, setVersionLabel] = useState("");
   const [zoom, setZoom] = useState(0.62);
+  const [mobileTab, setMobileTab] = useState("edit");
   const [printTarget, setPrintTarget] = useState<Agreement | null>(null);
   const hydrated = useRef(false);
 
@@ -68,8 +69,12 @@ function AgreementEditorPage() {
       setAgreement(stored.current);
       setVersions(stored.versions);
     }
+    // Fit the page width to small screens on first paint.
+    const w = window.innerWidth;
+    if (w < 1024) setZoom(Math.max(0.28, +(((w - 28) / 794) * 100).toFixed(0) / 100));
     hydrated.current = true;
   }, []);
+
 
   useEffect(() => {
     if (!hydrated.current) return;
