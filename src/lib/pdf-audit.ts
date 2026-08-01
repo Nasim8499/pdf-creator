@@ -1,4 +1,11 @@
-import { PDFDocument, PDFName, PDFRawStream, PDFArray, PDFDict } from "pdf-lib";
+import {
+  PDFDocument,
+  PDFName,
+  PDFRawStream,
+  PDFArray,
+  PDFDict,
+  decodePDFRawStream,
+} from "pdf-lib";
 import type { BuildReport } from "./pdf-build";
 
 export type AuditSeverity = "error" | "warning" | "pass";
@@ -42,7 +49,13 @@ function readPageText(doc: PDFDocument, index: number): { ops: number; chars: nu
   let ops = 0;
   let chars = 0;
   for (const stream of streams) {
-    const text = new TextDecoder("latin1").decode(stream.getContents());
+    let raw: Uint8Array;
+    try {
+      raw = decodePDFRawStream(stream).decode();
+    } catch {
+      raw = stream.getContents();
+    }
+    const text = new TextDecoder("latin1").decode(raw);
     ops += (text.match(/\bTj\b/g) ?? []).length + (text.match(/\bTJ\b/g) ?? []).length;
     for (const m of text.matchAll(/\(((?:\\.|[^\\()])*)\)\s*Tj/g)) {
       chars += (m[1] ?? "").replace(/\\(.)/g, "$1").length;
