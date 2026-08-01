@@ -471,6 +471,96 @@ function buildBlocks(ctx: Ctx): Block[] {
   });
 
   blocks.push({
+    id: "notice",
+    kind: "other",
+    label: "Private record notice",
+    keepWithNext: true,
+    node: (
+      <div
+        className="mb-6 flex gap-0 overflow-hidden"
+        style={{ border: `2px solid ${t.ink}`, background: t.chromeBg }}
+      >
+        <div className="w-[10px] shrink-0" style={{ background: t.accent }} />
+        <div className="px-4 py-3">
+          <div
+            className="text-[11px] font-semibold uppercase tracking-[0.2em]"
+            style={{ color: t.ink }}
+          >
+            {a.noticeTitle}
+          </div>
+          <p className="mt-1.5 text-[11.5px] leading-[1.6]" style={{ color: t.body }}>
+            {a.noticeText}
+          </p>
+        </div>
+      </div>
+    ),
+  });
+
+  if (a.letter.enabled) {
+    blocks.push({
+      id: "letter",
+      kind: "other",
+      label: "Work Employment Agreement Letter",
+      breakBefore: true,
+      node: (
+        <div>
+          <SectionBar index="Letter" title={a.letter.title} t={t} gap={s.sectionSpacing} />
+          <div
+            className="mb-5 flex flex-wrap items-start justify-between gap-4 pb-3"
+            style={{ borderBottom: `1px solid ${t.chromeRule}` }}
+          >
+            <div className="text-[11.5px] leading-snug" style={{ color: t.muted }}>
+              <div className={`${t.headingClass} text-[14px] font-semibold`} style={{ color: t.ink }}>
+                {a.employer.legalName || a.employer.name}
+              </div>
+              {a.employer.address ? <div>{a.employer.address}</div> : null}
+              {a.employer.contact ? <div>{a.employer.contact}</div> : null}
+              {a.employer.website ? <div>{a.employer.website}</div> : null}
+            </div>
+            <div className="text-right text-[11px] leading-snug" style={{ color: t.muted }}>
+              <div>{formatDate(a.agreementDate)}</div>
+              {a.letter.reference ? <div className="mt-1">{a.letter.reference}</div> : null}
+            </div>
+          </div>
+          <div className="mb-4 text-[11.5px] leading-snug" style={{ color: t.body }}>
+            <div className="font-semibold" style={{ color: t.ink }}>
+              {a.employee.legalName || a.employee.name}
+            </div>
+            {a.employee.address ? <div>{a.employee.address}</div> : null}
+          </div>
+          <p className="mb-3 text-[13px]" style={{ color: t.ink }}>
+            {a.letter.salutation}
+          </p>
+          <div
+            className="doc-prose text-[13px] leading-[1.78]"
+            style={{ color: t.body }}
+            dangerouslySetInnerHTML={{ __html: a.letter.html }}
+          />
+          <div className="mt-8">
+            <div className="text-[13px]" style={{ color: t.body }}>
+              {a.letter.signOff}
+            </div>
+            <div className="mt-10 w-64" style={{ borderBottom: `1px solid ${t.muted}` }} />
+            <div className={`${t.headingClass} mt-1 text-[13px] font-semibold`} style={{ color: t.ink }}>
+              {a.letter.signerName}
+            </div>
+            <div className="text-[11px]" style={{ color: t.muted }}>
+              {a.letter.signerTitle}
+            </div>
+          </div>
+          <p
+            className="mt-6 pt-3 text-[10.5px] italic leading-relaxed"
+            style={{ borderTop: `1px solid ${t.chromeRule}`, color: t.muted }}
+          >
+            This letter is part of a private employment record. It is not issued by or affiliated
+            with any government agency and does not confirm any visa, permit or accreditation.
+          </p>
+        </div>
+      ),
+    });
+  }
+
+  blocks.push({
     id: "parties-bar",
     kind: "band",
     label: "Part A · Parties",
