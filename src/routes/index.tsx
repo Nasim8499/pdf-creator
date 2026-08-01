@@ -27,6 +27,9 @@ import { PreviewDocument } from "@/components/agreement/PreviewDocument";
 import { VersionDiffDialog } from "@/components/agreement/VersionDiffDialog";
 import { LayoutAuditPanel } from "@/components/agreement/LayoutAuditPanel";
 import { CompliancePanel } from "@/components/agreement/CompliancePanel";
+import { ComplianceRulesPanel } from "@/components/agreement/ComplianceRulesPanel";
+import { complianceRules } from "@/lib/compliance";
+import { applyInzMapping } from "@/lib/inz-mapping";
 import { scanAgreement } from "@/lib/compliance";
 import { errorCount, type LayoutFingerprint, type LayoutReport } from "@/lib/layout-audit";
 import {
@@ -143,13 +146,45 @@ function AgreementEditorPage() {
   const print = (doc: Agreement, force = false) => {
     const blocked = scanAgreement(doc);
     if (blocked.length > 0) {
+      const groups = new Map<string, { label: string; hint: string; fields: string[] }>();
+      blocked.forEach((f) => {
+        const g = groups.get(f.ruleId) ?? { label: f.label, hint: f.hint, fields: [] };
+        if (!g.fields.includes(f.field)) g.fields.push(f.field);
+        groups.set(f.ruleId, g);
+      });
       toast.error(
-        `Export blocked — ${blocked.length} government-issued field${blocked.length === 1 ? "" : "s"} found`,
+        `PDF export prevented — ${blocked.length} government-issued field${blocked.length === 1 ? "" : "s"} blocked`,
         {
-          description: `${blocked[0]?.label}: “${blocked[0]?.match}” in ${blocked[0]?.field}. Remove these before exporting.`,
+          duration: 12000,
+          description: (
+            <div className="mt-1 space-y-1.5">
+              {[...groups.values()].map((g) => (
+                <div key={g.label}>
+                  <div className="text-xs font-semibold">{g.label}</div>
+                  <div className="text-[11px] opacity-90">
+                    In {g.fields.slice(0, 3).join(", ")}
+                    {g.fields.length > 3 ? ` +${g.fields.length - 3} more` : ""} — {g.hint}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ),
         },
       );
       return;
+    }
+    if (!force) {
+      const unconfirmed = complianceRules.filter((r) => !confirmedRules.includes(r.id));
+      if (unconfirmed.length > 0) {
+        toast.warning(
+          `Confirm ${unconfirmed.length} compliance rule${unconfirmed.length === 1 ? "" : "s"} before export`,
+          {
+            description: `Not yet confirmed: ${unconfirmed.map((r) => r.label).join(", ")}.`,
+            action: { label: "Confirm & export", onClick: () => { confirmAllRules(); print(doc, true); } },
+          },
+        );
+        return;
+      }
     }
     if (!force && doc === agreement) {
       const errs = errorCount(report);
@@ -182,6 +217,20 @@ function AgreementEditorPage() {
 
   const shown = printTarget ?? agreement;
   const findings = useMemo(() => scanAgreement(agreement), [agreement]);
+
+  const confirmAllRules = useCallback(() => {
+    setConfirmedRules(complianceRules.map((r) => r.id));
+  }, []);
+
+  const applyMapping = useCallback(() => {
+    setAgreement((prev) => {
+      const { next, mapped, excluded, renamed } = applyInzMapping(prev);
+      toast.success("INZ-labelled inputs converted", {
+        description: `${mapped.length} moved to party fields, ${excluded.length} agency-issued item(s) removed, ${renamed.length} relabelled as party-supplied. See the export appendix.`,
+      });
+      return next;
+    });
+  }, []);
 
 
   const editorColumn = (
@@ -275,6 +324,21 @@ function AgreementEditorPage() {
 
         <TabsContent value="design" className="mt-5 space-y-8">
           <CompliancePanel findings={findings} />
+          <ComplianceRulesPanel
+            agreement={agreement}
+            findings={findings}
+            confirmed={confirmedRules}
+            onToggle={(id, next) =>
+              setConfirmedRules((prev) =>
+                next ? [...new Set([...prev, id])] : prev.filter((x) => x !== id),
+              )
+            }
+            onConfirmAll={confirmAllRules}
+            onApplyMapping={applyMapping}
+            onToggleAppendix={(next) =>
+              update((prev) => ({ ...prev, settings: { ...prev.settings, showAppendix: next } }))
+            }
+          />
           <LayoutAuditPanel
             report={report}
             hasBaseline={baseline !== null}
