@@ -516,55 +516,6 @@ function buildBlocks(ctx: Ctx): Block[] {
       ),
     });
   }
-
-  blocks.push({
-    id: "title",
-    kind: "title",
-    label: "Title block",
-    breakBefore: s.showCover || s.showContents,
-    node: (
-      <div className="mb-6 pb-4" style={{ borderBottom: `2px solid ${t.ink}` }}>
-        <h1
-          className={`${t.headingClass} text-[26px] font-semibold leading-tight`}
-          style={{ color: t.ink }}
-        >
-          {a.documentTitle}
-        </h1>
-        {a.subtitle ? (
-          <p className="mt-1.5 text-[11.5px] italic" style={{ color: t.muted }}>
-            {a.subtitle}
-          </p>
-        ) : null}
-      </div>
-    ),
-  });
-
-  blocks.push({
-    id: "notice",
-    kind: "other",
-    label: "Private record notice",
-    keepWithNext: true,
-    node: (
-      <div
-        className="mb-6 flex gap-0 overflow-hidden"
-        style={{ border: `2px solid ${t.ink}`, background: t.chromeBg }}
-      >
-        <div className="w-[10px] shrink-0" style={{ background: t.accent }} />
-        <div className="px-4 py-3">
-          <div
-            className="text-[11px] font-semibold uppercase tracking-[0.2em]"
-            style={{ color: t.ink }}
-          >
-            {a.noticeTitle}
-          </div>
-          <p className="mt-1.5 text-[11.5px] leading-[1.6]" style={{ color: t.body }}>
-            {a.noticeText}
-          </p>
-        </div>
-      </div>
-    ),
-  });
-
   if (a.letter.enabled) {
     blocks.push({
       id: "letter",
@@ -628,6 +579,56 @@ function buildBlocks(ctx: Ctx): Block[] {
       ),
     });
   }
+
+
+  blocks.push({
+    id: "title",
+    kind: "title",
+    label: "Title block",
+    breakBefore: s.showCover || s.showContents,
+    node: (
+      <div className="mb-6 pb-4" style={{ borderBottom: `2px solid ${t.ink}` }}>
+        <h1
+          className={`${t.headingClass} text-[26px] font-semibold leading-tight`}
+          style={{ color: t.ink }}
+        >
+          {a.documentTitle}
+        </h1>
+        {a.subtitle ? (
+          <p className="mt-1.5 text-[11.5px] italic" style={{ color: t.muted }}>
+            {a.subtitle}
+          </p>
+        ) : null}
+      </div>
+    ),
+  });
+
+  blocks.push({
+    id: "notice",
+    kind: "other",
+    label: "Private record notice",
+    keepWithNext: true,
+    node: (
+      <div
+        className="mb-6 flex gap-0 overflow-hidden"
+        style={{ border: `2px solid ${t.ink}`, background: t.chromeBg }}
+      >
+        <div className="w-[10px] shrink-0" style={{ background: t.accent }} />
+        <div className="px-4 py-3">
+          <div
+            className="text-[11px] font-semibold uppercase tracking-[0.2em]"
+            style={{ color: t.ink }}
+          >
+            {a.noticeTitle}
+          </div>
+          <p className="mt-1.5 text-[11.5px] leading-[1.6]" style={{ color: t.body }}>
+            {a.noticeText}
+          </p>
+        </div>
+      </div>
+    ),
+  });
+
 
   blocks.push({
     id: "parties-bar",
