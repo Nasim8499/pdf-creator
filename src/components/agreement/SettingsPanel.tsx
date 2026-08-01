@@ -13,6 +13,7 @@ import {
   type CodeMarkSettings,
   type DocSettings,
   type LogoSettings,
+  type SponsorLogoSettings,
 } from "@/lib/agreement";
 
 type Props = {
@@ -113,6 +114,12 @@ function Chips<T extends string>({
 
 export function SettingsPanel({ value, onChange }: Props) {
   const s = value.settings;
+  const sl = s.sponsorLogo;
+  const setSponsor = (patch: Partial<SponsorLogoSettings>) =>
+    onChange((p) => ({
+      ...p,
+      settings: { ...p.settings, sponsorLogo: { ...p.settings.sponsorLogo, ...patch } },
+    }));
   const setS = (patch: Partial<DocSettings>) =>
     onChange((p) => ({ ...p, settings: { ...p.settings, ...patch } }));
   const setLogo = (patch: Partial<LogoSettings>) =>
@@ -398,6 +405,136 @@ export function SettingsPanel({ value, onChange }: Props) {
         >
           <Plus className="size-3.5" /> Sponsor
         </Button>
+      </Group>
+
+      <Separator />
+
+      <Group title="Sponsor logo placement">
+        <div className="grid grid-cols-2 gap-2">
+          <Toggle label="On cover" checked={sl.onCover} onChange={(v) => setSponsor({ onCover: v })} />
+          <Toggle
+            label="In signatures"
+            checked={sl.inSignatures}
+            onChange={(v) => setSponsor({ inSignatures: v })}
+          />
+          <Toggle
+            label="In page header"
+            checked={sl.inHeader}
+            onChange={(v) => setSponsor({ inHeader: v })}
+          />
+          <Toggle
+            label="In page footer"
+            checked={sl.inFooter}
+            onChange={(v) => setSponsor({ inFooter: v })}
+          />
+        </div>
+
+        {sl.inHeader ? (
+          <div className="space-y-1.5">
+            <Label className="text-xs">Header side</Label>
+            <Chips
+              value={sl.headerSide}
+              options={[
+                { value: "left" as const, label: "Left" },
+                { value: "right" as const, label: "Right" },
+              ]}
+              onChange={(headerSide) => setSponsor({ headerSide })}
+            />
+          </div>
+        ) : null}
+        {sl.inFooter ? (
+          <div className="space-y-1.5">
+            <Label className="text-xs">Footer side</Label>
+            <Chips
+              value={sl.footerSide}
+              options={[
+                { value: "left" as const, label: "Left" },
+                { value: "right" as const, label: "Right" },
+              ]}
+              onChange={(footerSide) => setSponsor({ footerSide })}
+            />
+          </div>
+        ) : null}
+
+        <div className="space-y-1.5">
+          <Label className="text-xs">Strip alignment</Label>
+          <Chips
+            value={sl.align}
+            options={[
+              { value: "left" as const, label: "Left" },
+              { value: "center" as const, label: "Centre" },
+              { value: "right" as const, label: "Right" },
+            ]}
+            onChange={(align) => setSponsor({ align })}
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs">Logo fit</Label>
+          <Chips
+            value={sl.fit}
+            options={[
+              { value: "contain" as const, label: "Contain" },
+              { value: "cover" as const, label: "Cover" },
+            ]}
+            onChange={(fit) => setSponsor({ fit })}
+          />
+        </div>
+
+        <Range
+          label="Strip logo height"
+          value={sl.stripHeight}
+          min={16}
+          max={72}
+          onChange={(stripHeight) => setSponsor({ stripHeight })}
+        />
+        <Range
+          label="Header / footer mark height"
+          value={sl.markHeight}
+          min={8}
+          max={28}
+          onChange={(markHeight) => setSponsor({ markHeight })}
+        />
+        <Range
+          label="Gap between sponsors"
+          value={sl.gap}
+          min={8}
+          max={64}
+          onChange={(gap) => setSponsor({ gap })}
+        />
+        <Range
+          label="Side margin"
+          value={sl.marginX}
+          min={0}
+          max={32}
+          onChange={(marginX) => setSponsor({ marginX })}
+        />
+        <Range
+          label="Top & bottom margin"
+          value={sl.marginY}
+          min={0}
+          max={16}
+          onChange={(marginY) => setSponsor({ marginY })}
+        />
+        <Range
+          label="Marks per header / footer"
+          value={sl.maxMarks}
+          min={1}
+          max={6}
+          suffix=""
+          onChange={(maxMarks) => setSponsor({ maxMarks })}
+        />
+        <div className="grid grid-cols-2 gap-2">
+          <Toggle
+            label="Eye-catching accent"
+            checked={sl.highlight}
+            onChange={(v) => setSponsor({ highlight: v })}
+          />
+          <Toggle label="Frame logos" checked={sl.frame} onChange={(v) => setSponsor({ frame: v })} />
+        </div>
+        <p className="text-[11px] text-muted-foreground">
+          These margins are applied identically to the sponsor mark on every page header and footer, so
+          the strip never shifts between pages or in the exported PDF.
+        </p>
       </Group>
     </div>
   );

@@ -1,11 +1,27 @@
 import { useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
-import { formatDate, type Agreement, type DocSettings, type LogoSettings, type Party } from "@/lib/agreement";
+import {
+  formatDate,
+  type Agreement,
+  type DocSettings,
+  type LogoSettings,
+  type Party,
+  type SponsorLogoSettings,
+} from "@/lib/agreement";
 import { docThemes, pageSizes, type DocTheme } from "@/lib/doc-theme";
+import { buildReport, type AuditBlockMeta, type LayoutFingerprint, type LayoutReport } from "@/lib/layout-audit";
 import { CodeMark } from "./CodeMark";
 
-type Block = { id: string; node: ReactNode; keepWithNext?: boolean; breakBefore?: boolean };
+type Block = {
+  id: string;
+  node: ReactNode;
+  keepWithNext?: boolean;
+  breakBefore?: boolean;
+  kind?: AuditBlockMeta["kind"];
+  label?: string;
+};
 
 type Ctx = { a: Agreement; s: DocSettings; t: DocTheme };
+
 
 const alignClass: Record<LogoSettings["align"], string> = {
   left: "justify-start",
@@ -114,28 +130,56 @@ function SectionBar({ index, title, t, gap }: { index: string; title: string; t:
 }
 
 function SponsorStrip({ a, t }: Ctx) {
-  const { sponsors, sponsorHeading } = a.settings;
+  const { sponsors, sponsorHeading, sponsorLogo: sl } = a.settings;
   if (!sponsors.length) return null;
   return (
     <div
       className="mb-5 overflow-hidden"
-      style={{ border: `1px solid ${t.chromeRule}`, background: t.surface }}
+      style={{ border: `1px solid ${sl.highlight ? t.accent : t.chromeRule}`, background: t.surface }}
     >
       <div
-        className="px-3 py-1 text-[9.5px] font-semibold uppercase tracking-[0.22em]"
+        className="flex items-center gap-2 px-3 py-1 text-[9.5px] font-semibold uppercase tracking-[0.22em]"
         style={{ background: t.bandBg, color: t.bandText }}
       >
+        {sl.highlight ? (
+          <span className="h-2.5 w-2.5 shrink-0" style={{ background: t.accent }} />
+        ) : null}
         {sponsorHeading || "Supported by"}
       </div>
-      <div className="flex flex-wrap items-center gap-x-6 gap-y-3 px-4 py-3">
+      <div
+        className={`flex flex-wrap items-center ${alignClass[sl.align]}`}
+        style={{
+          columnGap: sl.gap,
+          rowGap: Math.max(8, sl.marginY * 2),
+          paddingLeft: 12 + sl.marginX,
+          paddingRight: 12 + sl.marginX,
+          paddingTop: 10 + sl.marginY,
+          paddingBottom: 10 + sl.marginY,
+        }}
+      >
         {sponsors.map((sp) => (
           <div key={sp.id} className="flex items-center gap-2.5">
             {sp.logo ? (
-              <img src={sp.logo} alt={sp.name} className="h-8 w-auto object-contain" />
+              <img
+                src={sp.logo}
+                alt={sp.name}
+                className="w-auto"
+                style={{
+                  height: sl.stripHeight,
+                  maxWidth: sl.stripHeight * 5,
+                  objectFit: sl.fit,
+                  ...(sl.frame ? { border: `1px solid ${t.chromeRule}`, padding: 2 } : null),
+                }}
+              />
             ) : (
               <div
-                className="grid size-8 place-items-center text-[11px] font-bold"
-                style={{ background: t.bandBg, color: t.bandText }}
+                className="grid place-items-center text-[11px] font-bold"
+                style={{
+                  height: sl.stripHeight,
+                  width: sl.stripHeight,
+                  background: sl.highlight ? t.accent : t.bandBg,
+                  color: t.bandText,
+                }}
               >
                 {(sp.name || "?").slice(0, 1).toUpperCase()}
               </div>
@@ -157,6 +201,55 @@ function SponsorStrip({ a, t }: Ctx) {
   );
 }
 
+/** Compact sponsor row printed in every page header/footer. */
+function SponsorMarks({ a, t, sl }: { a: Agreement; t: DocTheme; sl: SponsorLogoSettings }) {
+  const sponsors = a.settings.sponsors.slice(0, Math.max(1, sl.maxMarks));
+  if (!sponsors.length) return null;
+  return (
+    <div
+      className="flex shrink-0 items-center"
+      style={{
+        gap: Math.max(6, sl.gap / 3),
+        marginLeft: sl.marginX,
+        marginRight: sl.marginX,
+        marginTop: sl.marginY,
+        marginBottom: sl.marginY,
+        paddingLeft: sl.highlight ? 6 : 0,
+        borderLeft: sl.highlight ? `2px solid ${t.accent}` : undefined,
+      }}
+    >
+      {sponsors.map((sp) =>
+        sp.logo ? (
+          <img
+            key={sp.id}
+            src={sp.logo}
+            alt={sp.name}
+            className="w-auto"
+            style={{
+              height: sl.markHeight,
+              maxWidth: sl.markHeight * 5,
+              objectFit: sl.fit,
+              ...(sl.frame ? { border: `1px solid ${t.chromeRule}` } : null),
+            }}
+          />
+        ) : (
+          <span
+            key={sp.id}
+            className="whitespace-nowrap px-1 text-[8px] font-semibold uppercase tracking-[0.14em]"
+            style={{
+              lineHeight: `${sl.markHeight}px`,
+              color: t.ink,
+              ...(sl.frame ? { border: `1px solid ${t.chromeRule}` } : null),
+            }}
+          >
+            {sp.name}
+          </span>
+        ),
+      )}
+    </div>
+  );
+}
+
 function VerifyMark({ t, s, inline }: { t: DocTheme; s: DocSettings; inline?: boolean }) {
   if (!s.codes.enabled || !s.codes.value.trim()) return null;
   return (
@@ -172,6 +265,7 @@ function VerifyMark({ t, s, inline }: { t: DocTheme; s: DocSettings; inline?: bo
         <div className="mt-0.5 break-all text-[9.5px] leading-snug" style={{ color: t.muted }}>
           {s.codes.value}
         </div>
+
         {s.codes.caption ? (
           <div className="mt-1 text-[9.5px] italic" style={{ color: t.muted }}>
             {s.codes.caption}
@@ -219,6 +313,8 @@ function buildBlocks(ctx: Ctx): Block[] {
   if (s.showCover) {
     blocks.push({
       id: "cover",
+      kind: "cover",
+      label: "Cover page",
       node: (
         <div className="flex flex-col justify-between" style={{ minHeight: 820 }}>
           <div>
@@ -302,7 +398,7 @@ function buildBlocks(ctx: Ctx): Block[] {
           </div>
 
           <div>
-            {s.showSponsorStrip ? <SponsorStrip {...ctx} /> : null}
+            {s.showSponsorStrip && s.sponsorLogo.onCover ? <SponsorStrip {...ctx} /> : null}
             <p
               className="pt-3 text-[11px] leading-relaxed"
               style={{ borderTop: `1px solid ${t.chromeRule}`, color: t.muted }}
@@ -320,6 +416,8 @@ function buildBlocks(ctx: Ctx): Block[] {
   if (s.showContents) {
     blocks.push({
       id: "toc",
+      kind: "toc",
+      label: "Contents",
       breakBefore: s.showCover,
       node: (
         <div>
@@ -352,6 +450,8 @@ function buildBlocks(ctx: Ctx): Block[] {
 
   blocks.push({
     id: "title",
+    kind: "title",
+    label: "Title block",
     breakBefore: s.showCover || s.showContents,
     node: (
       <div className="mb-6 pb-4" style={{ borderBottom: `2px solid ${t.ink}` }}>
@@ -372,6 +472,8 @@ function buildBlocks(ctx: Ctx): Block[] {
 
   blocks.push({
     id: "parties-bar",
+    kind: "band",
+    label: "Part A · Parties",
     keepWithNext: true,
     node: <SectionBar index="Part A" title="Parties to this agreement" t={t} gap={s.sectionSpacing} />,
   });
@@ -407,6 +509,8 @@ function buildBlocks(ctx: Ctx): Block[] {
 
   blocks.push({
     id: "terms-bar",
+    kind: "band",
+    label: "Part B · Terms",
     keepWithNext: true,
     breakBefore: brk,
     node: (
@@ -417,6 +521,8 @@ function buildBlocks(ctx: Ctx): Block[] {
   a.clauses.forEach((c, index) => {
     blocks.push({
       id: c.id,
+      kind: "clause",
+      label: c.heading,
       node: (
         <section style={{ marginBottom: s.clauseSpacing }}>
           <h2
@@ -443,6 +549,8 @@ function buildBlocks(ctx: Ctx): Block[] {
   if (a.consents.length) {
     blocks.push({
       id: "consents-head",
+      kind: "band",
+      label: "Part C · Consents",
       keepWithNext: true,
       breakBefore: brk,
       node: (
@@ -479,6 +587,8 @@ function buildBlocks(ctx: Ctx): Block[] {
   if (a.signatures.length) {
     blocks.push({
       id: "sign-head",
+      kind: "band",
+      label: "Part D · Signatures",
       keepWithNext: true,
       breakBefore: brk,
       node: <SectionBar index="Part D" title="Execution and signatures" t={t} gap={s.sectionSpacing} />,
@@ -492,6 +602,8 @@ function buildBlocks(ctx: Ctx): Block[] {
           : undefined;
       blocks.push({
         id: sig.id,
+        kind: "signature",
+        label: sig.role,
         node: (
           <div className="mb-4" style={{ border: `1px solid ${t.chromeRule}` }}>
             <div
@@ -528,18 +640,30 @@ function buildBlocks(ctx: Ctx): Block[] {
     if (s.codes.enabled && s.codes.inSignatures) {
       blocks.push({ id: "sign-code", node: <VerifyMark t={t} s={s} /> });
     }
-    if (s.showSponsorStrip && s.sponsors.length && s.showCover) {
-      blocks.push({ id: "sign-sponsors", node: <div className="mt-5"><SponsorStrip {...ctx} /></div> });
+    if (s.showSponsorStrip && s.sponsors.length && s.sponsorLogo.inSignatures) {
+      blocks.push({ id: "sign-sponsors", kind: "other", label: "Sponsors", node: <div className="mt-5"><SponsorStrip {...ctx} /></div> });
     }
   }
 
   return blocks;
 }
 
-export function PreviewDocument({ agreement, zoom = 1 }: { agreement: Agreement; zoom?: number }) {
+export function PreviewDocument({
+  agreement,
+  zoom = 1,
+  onAudit,
+  baseline,
+}: {
+  agreement: Agreement;
+  zoom?: number;
+  onAudit?: (report: LayoutReport) => void;
+  baseline?: LayoutFingerprint | null;
+}) {
   const s = agreement.settings;
   const t = docThemes[s.theme] ?? docThemes["nz-official"];
   const size = pageSizes[s.pageSize] ?? pageSizes.A4;
+  const sl = s.sponsorLogo;
+  const sponsorsOn = s.showSponsorStrip && s.sponsors.length > 0;
 
   const HEADER_H = s.showHeader ? 58 : 0;
   const FOOTER_H = s.showFooter ? 46 : 0;
@@ -552,6 +676,10 @@ export function PreviewDocument({ agreement, zoom = 1 }: { agreement: Agreement;
   const measureRef = useRef<HTMLDivElement>(null);
   const [pages, setPages] = useState<number[][]>([blocks.map((_, i) => i)]);
   const signature = JSON.stringify(agreement);
+  const auditRef = useRef(onAudit);
+  auditRef.current = onAudit;
+  const baselineRef = useRef(baseline);
+  baselineRef.current = baseline;
 
   useLayoutEffect(() => {
     const el = measureRef.current;
@@ -579,9 +707,35 @@ export function PreviewDocument({ agreement, zoom = 1 }: { agreement: Agreement;
       used += h;
     });
     if (current.length) next.push(current);
-    setPages(next.length ? next : [[]]);
+    const paged = next.length ? next : [[]];
+    setPages(paged);
+
+    if (auditRef.current) {
+      const metas: AuditBlockMeta[] = blocks.map((b, i) => ({
+        id: b.id,
+        kind: b.kind ?? "other",
+        label: b.label ?? b.id,
+        height: heights[i] ?? 0,
+        keepWithNext: b.keepWithNext,
+        breakBefore: b.breakBefore,
+      }));
+      auditRef.current(
+        buildReport(
+          {
+            blocks: metas,
+            pages: paged,
+            packHeight: PACK_H,
+            settings: s,
+            headerHeight: HEADER_H,
+            footerHeight: FOOTER_H,
+          },
+          baselineRef.current,
+        ),
+      );
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [signature, PACK_H, innerW]);
+
 
   const pageStyle: CSSProperties = {
     width: size.w,
@@ -630,6 +784,9 @@ export function PreviewDocument({ agreement, zoom = 1 }: { agreement: Agreement;
                 style={{ height: HEADER_H, borderBottom: `2px solid ${t.chromeRule}` }}
               >
                 <div className="flex min-w-0 items-center gap-2.5">
+                  {sponsorsOn && sl.inHeader && sl.headerSide === "left" ? (
+                    <SponsorMarks a={agreement} t={t} sl={sl} />
+                  ) : null}
                   {s.logo.showInHeader ? (
                     <Logo
                       src={agreement.employer.logo}
@@ -671,6 +828,9 @@ export function PreviewDocument({ agreement, zoom = 1 }: { agreement: Agreement;
                       {agreement.employee.name}
                     </div>
                   </div>
+                  {sponsorsOn && sl.inHeader && sl.headerSide === "right" ? (
+                    <SponsorMarks a={agreement} t={t} sl={sl} />
+                  ) : null}
                   {s.logo.showInHeader ? (
                     <Logo
                       src={agreement.employee.logo}
@@ -697,6 +857,9 @@ export function PreviewDocument({ agreement, zoom = 1 }: { agreement: Agreement;
                 style={{ height: FOOTER_H, borderTop: `2px solid ${t.chromeRule}`, color: t.muted }}
               >
                 <div className="flex min-w-0 items-center gap-2">
+                  {sponsorsOn && sl.inFooter && sl.footerSide === "left" ? (
+                    <SponsorMarks a={agreement} t={t} sl={sl} />
+                  ) : null}
                   {s.logo.showInFooter ? (
                     <Logo src={agreement.employer.logo} alt="" h={s.logo.footerHeight} s={s.logo} />
                   ) : null}
@@ -707,6 +870,9 @@ export function PreviewDocument({ agreement, zoom = 1 }: { agreement: Agreement;
                     <span className="tabular-nums uppercase tracking-[0.14em]">
                       Page {pageIndex + 1} of {pages.length}
                     </span>
+                  ) : null}
+                  {sponsorsOn && sl.inFooter && sl.footerSide === "right" ? (
+                    <SponsorMarks a={agreement} t={t} sl={sl} />
                   ) : null}
                   {s.logo.showInFooter ? (
                     <Logo src={agreement.employee.logo} alt="" h={s.logo.footerHeight} s={s.logo} />
