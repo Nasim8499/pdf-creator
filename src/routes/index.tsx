@@ -424,7 +424,25 @@ function AgreementEditorPage() {
   );
 
   const previewColumn = (
-    <div className="preview-scroll lg:h-[calc(100vh-var(--app-header))] lg:overflow-auto">
+    <div
+      id="preview-panel"
+      role="region"
+      aria-label="Live paginated PDF preview"
+      className="preview-scroll relative lg:h-[calc(100vh-var(--app-header))] lg:overflow-auto"
+    >
+      {previewPending && !printTarget ? (
+        <div
+          role="status"
+          aria-live="polite"
+          className="no-print pointer-events-none sticky top-2 z-10 mx-auto flex w-fit items-center gap-1.5 rounded-full border border-border bg-background/95 px-3 py-1 text-[11px] font-medium text-muted-foreground shadow-sm backdrop-blur"
+        >
+          <Loader2 className="size-3.5 animate-spin" aria-hidden="true" /> Preview updating…
+        </div>
+      ) : (
+        <span className="sr-only" role="status" aria-live="polite">
+          Preview up to date
+        </span>
+      )}
       <div className="preview-pad p-3 sm:p-6">
         <PreviewDocument
           agreement={shown}
@@ -434,6 +452,7 @@ function AgreementEditorPage() {
       </div>
     </div>
   );
+
 
   return (
     <main className="min-h-screen bg-background">
