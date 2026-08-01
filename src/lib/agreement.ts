@@ -371,6 +371,12 @@ export function withSettings(doc: Agreement): Agreement {
   const s = (doc.settings ?? {}) as Partial<DocSettings>;
   return {
     ...doc,
+    noticeTitle: doc.noticeTitle ?? defaultAgreement.noticeTitle,
+    noticeText: doc.noticeText ?? defaultAgreement.noticeText,
+    references: doc.references ?? clone(defaultAgreement.references),
+    referencesNote: doc.referencesNote ?? defaultAgreement.referencesNote,
+    letter: { ...clone(defaultAgreement.letter), ...(doc.letter ?? {}) },
+
     settings: {
       ...defaultSettings,
       ...s,
