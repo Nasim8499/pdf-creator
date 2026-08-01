@@ -193,7 +193,28 @@ export const defaultSettings: DocSettings = {
   sponsors: [],
   showSponsorStrip: false,
   sponsorHeading: "Supported by",
+  sponsorLogo: {
+    stripHeight: 32,
+    markHeight: 16,
+    fit: "contain",
+    align: "left",
+    gap: 24,
+    marginX: 8,
+    marginY: 2,
+    inHeader: false,
+    inFooter: true,
+    onCover: true,
+    inSignatures: true,
+    headerSide: "right",
+    footerSide: "right",
+    maxMarks: 3,
+    frame: false,
+    highlight: true,
+  },
 };
+
+export const defaultSponsorLogo = defaultSettings.sponsorLogo;
+
 
 export const defaultAgreement: Agreement = {
   settings: JSON.parse(JSON.stringify(defaultSettings)) as DocSettings,
