@@ -275,7 +275,12 @@ function AgreementEditorPage() {
           <TabsContent value="edit" className="no-print mt-0">
             {editorColumn}
           </TabsContent>
-          <TabsContent value="preview" forceMount className="mt-0 data-[state=inactive]:hidden">
+          <TabsContent
+            value="preview"
+            forceMount
+            className="print-keep mt-0 data-[state=inactive]:hidden"
+          >
+
             <section className="print-root bg-muted/50">
               <div className="flex items-center justify-center gap-1 border-b border-border bg-background px-3 py-1.5 no-print">
                 <Button
