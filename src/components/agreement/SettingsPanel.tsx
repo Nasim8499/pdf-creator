@@ -533,7 +533,3 @@ export function SettingsPanel({ value, onChange }: Props) {
     </div>
   );
 }
-
-    </div>
-  );
-}
