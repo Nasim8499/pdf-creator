@@ -1,11 +1,24 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { FileDown, History, Save, RotateCcw, Trash2, ZoomIn, ZoomOut } from "lucide-react";
+import {
+  FileDown,
+  History,
+  Save,
+  RotateCcw,
+  Trash2,
+  ZoomIn,
+  ZoomOut,
+  Settings2,
+  PencilLine,
+  FileText,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EditorPanel } from "@/components/agreement/EditorPanel";
+import { SettingsPanel } from "@/components/agreement/SettingsPanel";
 import { PreviewDocument } from "@/components/agreement/PreviewDocument";
 import { VersionDiffDialog } from "@/components/agreement/VersionDiffDialog";
 import {
@@ -17,6 +30,7 @@ import {
   type Agreement,
   type Version,
 } from "@/lib/agreement";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
