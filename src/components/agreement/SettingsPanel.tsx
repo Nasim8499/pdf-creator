@@ -113,6 +113,12 @@ function Chips<T extends string>({
 
 export function SettingsPanel({ value, onChange }: Props) {
   const s = value.settings;
+  const sl = s.sponsorLogo;
+  const setSponsor = (patch: Partial<SponsorLogoSettings>) =>
+    onChange((p) => ({
+      ...p,
+      settings: { ...p.settings, sponsorLogo: { ...p.settings.sponsorLogo, ...patch } },
+    }));
   const setS = (patch: Partial<DocSettings>) =>
     onChange((p) => ({ ...p, settings: { ...p.settings, ...patch } }));
   const setLogo = (patch: Partial<LogoSettings>) =>
