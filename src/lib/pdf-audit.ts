@@ -57,8 +57,11 @@ function readPageText(doc: PDFDocument, index: number): { ops: number; chars: nu
     }
     const text = new TextDecoder("latin1").decode(raw);
     ops += (text.match(/\bTj\b/g) ?? []).length + (text.match(/\bTJ\b/g) ?? []).length;
-    for (const m of text.matchAll(/\(((?:\\.|[^\\()])*)\)\s*Tj/g)) {
+    for (const m of text.matchAll(/\(((?:\\.|[^\\()])*)\)\s*T[jJ]/g)) {
       chars += (m[1] ?? "").replace(/\\(.)/g, "$1").length;
+    }
+    for (const m of text.matchAll(/<([0-9A-Fa-f\s]+)>\s*T[jJ]/g)) {
+      chars += Math.floor((m[1] ?? "").replace(/\s/g, "").length / 4);
     }
   }
   return { ops, chars };
