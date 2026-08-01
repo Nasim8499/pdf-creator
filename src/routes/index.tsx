@@ -261,6 +261,7 @@ function AgreementEditorPage() {
           <EditorPanel value={agreement} onChange={update} />
         </TabsContent>
         <TabsContent value="design" className="mt-5 space-y-8">
+          <CompliancePanel findings={findings} />
           <LayoutAuditPanel
             report={report}
             hasBaseline={baseline !== null}
