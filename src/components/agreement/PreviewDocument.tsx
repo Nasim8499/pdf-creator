@@ -99,6 +99,7 @@ function buildBlocks(a: Agreement): Block[] {
   if (a.consents.length) {
     blocks.push({
       id: "consents-head",
+      keepWithNext: true,
       node: (
         <h2 className="doc-serif mb-2 mt-2 text-[15px] font-semibold text-neutral-900">
           Acknowledgements and Consents
@@ -132,6 +133,7 @@ function buildBlocks(a: Agreement): Block[] {
   if (a.signatures.length) {
     blocks.push({
       id: "sign-head",
+      keepWithNext: true,
       node: (
         <h2 className="doc-serif mb-3 mt-6 text-[15px] font-semibold text-neutral-900">
           Signatures
@@ -186,9 +188,13 @@ export function PreviewDocument({
     let used = 0;
     heights.forEach((h, i) => {
       if (current.length && used + h > PACK_H) {
+        const moved: number[] = [];
+        while (current.length > 1 && blocks[current[current.length - 1]]?.keepWithNext) {
+          moved.unshift(current.pop() as number);
+        }
         next.push(current);
-        current = [];
-        used = 0;
+        current = moved;
+        used = moved.reduce((sum, idx) => sum + heights[idx], 0);
       }
       current.push(i);
       used += h;
