@@ -385,8 +385,17 @@ function buildBlocks(ctx: Ctx): Block[] {
       kind: "cover",
       label: "Cover page",
       node: (
-        <div className="flex flex-col justify-between" style={{ minHeight: 820 }}>
-          <div>
+        <div className="relative flex flex-col justify-between" style={{ minHeight: 820 }}>
+          <div
+            className="absolute left-0 top-0"
+            style={{ width: 6, height: "100%", background: t.ink }}
+          />
+          <div
+            className="absolute left-0 top-0"
+            style={{ width: 6, height: 180, background: t.accent }}
+          />
+
+          <div className="pl-7">
             <div
               className="flex items-start justify-between gap-6 pb-4"
               style={{ borderBottom: `2px solid ${t.ink}` }}
@@ -403,12 +412,12 @@ function buildBlocks(ctx: Ctx): Block[] {
                 <span />
               )}
               <div
-                className="pt-1 text-center text-[9.5px] uppercase leading-relaxed tracking-[0.2em]"
+                className="pt-1 text-center text-[9.5px] uppercase leading-relaxed tracking-[0.24em]"
                 style={{ color: t.muted }}
               >
                 New Zealand
                 <br />
-                Individual Employment Agreement
+                {a.headerText || a.documentTitle}
               </div>
               {s.logo.showOnCover ? (
                 <LogoSlot
@@ -422,42 +431,68 @@ function buildBlocks(ctx: Ctx): Block[] {
                 <span />
               )}
             </div>
-            <div
-              className="mt-3 flex justify-between text-[9px] uppercase tracking-[0.18em]"
-              style={{ color: t.muted }}
-            >
-              <span>Part A · Parties</span>
-              <span>Part B · Terms</span>
-              <span>Part C · Consents</span>
-              <span>Part D · Signatures</span>
+            <div className="mt-4 flex flex-wrap gap-1.5">
+              {["Part A · Parties", "Part B · Terms", "Part C · Consents", "Part D · Signatures"].map(
+                (label) => (
+                  <span
+                    key={label}
+                    className="px-2 py-[3px] text-[8.5px] font-semibold uppercase tracking-[0.18em]"
+                    style={{ border: `1px solid ${t.chromeRule}`, color: t.muted }}
+                  >
+                    {label}
+                  </span>
+                ),
+              )}
             </div>
           </div>
 
-          <div>
-            <div className="mb-5 h-[3px] w-24" style={{ background: t.accent }} />
+          <div className="pl-7">
+            <span
+              className="inline-block px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.24em]"
+              style={{ background: t.accent, color: t.bandText }}
+            >
+              {coverBadge(a)}
+            </span>
             <h1
-              className={`${t.headingClass} text-[42px] font-semibold leading-[1.1]`}
+              className={`${t.headingClass} mt-5 text-[46px] font-semibold leading-[1.05]`}
               style={{ color: t.ink }}
             >
               {a.documentTitle}
             </h1>
+            <div className="mt-4 h-[3px] w-28" style={{ background: t.accent }} />
             {a.subtitle ? (
-              <p className="mt-4 max-w-[80%] text-[13px] italic leading-relaxed" style={{ color: t.muted }}>
+              <p
+                className="mt-4 max-w-[82%] text-[13px] italic leading-relaxed"
+                style={{ color: t.muted }}
+              >
                 {a.subtitle}
               </p>
             ) : null}
-            <div className="mt-8 grid grid-cols-2" style={{ borderTop: `1px solid ${t.chromeRule}`, borderBottom: `1px solid ${t.chromeRule}` }}>
+            <div
+              className="mt-8 grid grid-cols-2"
+              style={{ border: `1px solid ${t.chromeRule}`, background: t.surface }}
+            >
               {[
-                { k: "Employer", v: a.employer.name || "—" },
-                { k: "Employee", v: a.employee.name || "—" },
+                { k: "Employer / Principal", v: a.employer.name || "—" },
+                { k: "Employee / Contractor", v: a.employee.name || "—" },
                 { k: "Date of agreement", v: formatDate(a.agreementDate) },
                 { k: "Commencement", v: formatDate(a.startDate) },
-              ].map(({ k, v }) => (
-                <div key={k} className="px-1 py-3">
-                  <div className="text-[10px] uppercase tracking-[0.18em]" style={{ color: t.muted }}>
+              ].map(({ k, v }, i) => (
+                <div
+                  key={k}
+                  className="px-4 py-3.5"
+                  style={{
+                    borderRight: i % 2 === 0 ? `1px solid ${t.chromeRule}` : undefined,
+                    borderTop: i > 1 ? `1px solid ${t.chromeRule}` : undefined,
+                  }}
+                >
+                  <div className="text-[9.5px] uppercase tracking-[0.2em]" style={{ color: t.muted }}>
                     {k}
                   </div>
-                  <div className={`${t.headingClass} mt-1 text-[16px] font-semibold`} style={{ color: t.ink }}>
+                  <div
+                    className={`${t.headingClass} mt-1 text-[16px] font-semibold`}
+                    style={{ color: t.ink }}
+                  >
                     {v}
                   </div>
                 </div>
@@ -466,7 +501,7 @@ function buildBlocks(ctx: Ctx): Block[] {
             {s.codes.enabled && s.codes.onCover ? <VerifyMark t={t} s={s} /> : null}
           </div>
 
-          <div>
+          <div className="pl-7">
             {s.showSponsorStrip && s.sponsorLogo.onCover ? <SponsorStrip {...ctx} /> : null}
             <p
               className="pt-3 text-[11px] leading-relaxed"
@@ -481,6 +516,7 @@ function buildBlocks(ctx: Ctx): Block[] {
       ),
     });
   }
+
 
   if (s.showContents) {
     blocks.push({
