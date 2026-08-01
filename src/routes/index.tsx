@@ -69,6 +69,7 @@ function AgreementEditorPage() {
   const [agreement, setAgreement] = useState<Agreement>(defaultAgreement);
   const [versions, setVersions] = useState<Version[]>([]);
   const [versionLabel, setVersionLabel] = useState("");
+  const [confirmedRules, setConfirmedRules] = useState<string[]>([]);
   const [zoom, setZoom] = useState(0.62);
   const [mobileTab, setMobileTab] = useState("edit");
   const [printTarget, setPrintTarget] = useState<Agreement | null>(null);
