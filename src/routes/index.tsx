@@ -94,6 +94,7 @@ function AgreementEditorPage() {
   const [draftSavedAt, setDraftSavedAt] = useState<string | null>(null);
   const [printTarget, setPrintTarget] = useState<Agreement | null>(null);
   const [exportOpen, setExportOpen] = useState(false);
+  const [pdfPreview, setPdfPreview] = useState<{ doc: Agreement; label?: string } | null>(null);
   const [textScale, setTextScale] = useState<"base" | "large" | "xlarge">("base");
 
 
