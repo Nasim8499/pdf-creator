@@ -22,6 +22,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EditorPanel } from "@/components/agreement/EditorPanel";
 import { QuickFillPanel } from "@/components/agreement/QuickFillPanel";
 import { SettingsPanel } from "@/components/agreement/SettingsPanel";
+import { DraftsPanel } from "@/components/agreement/DraftsPanel";
+import { loadDrafts, persistDrafts, upsertAutoDraft, type Draft } from "@/lib/drafts";
+
 
 import { PreviewDocument } from "@/components/agreement/PreviewDocument";
 import { VersionDiffDialog } from "@/components/agreement/VersionDiffDialog";
