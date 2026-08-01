@@ -508,6 +508,7 @@ function AgreementEditorPage() {
               size="icon"
               variant="ghost"
               aria-label="Zoom out"
+              className="size-11"
               onClick={() => setZoom((z) => Math.max(0.25, +(z - 0.06).toFixed(2)))}
             >
               <ZoomOut className="size-4" />
@@ -519,16 +520,37 @@ function AgreementEditorPage() {
               size="icon"
               variant="ghost"
               aria-label="Zoom in"
+              className="size-11"
               onClick={() => setZoom((z) => Math.min(1.4, +(z + 0.06).toFixed(2)))}
             >
               <ZoomIn className="size-4" />
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="ml-2 h-9"
+              onClick={() =>
+                setZoom(
+                  Math.max(0.25, +(((window.innerWidth - 28) / 794).toFixed(2))),
+                )
+              }
+            >
+              Fit width
             </Button>
           </div>
           {previewColumn}
         </section>
       </div>
+
+      {/* Mobile action bar — one export button, current preview settings */}
+      <div className="no-print sticky bottom-0 z-30 border-t border-border bg-background/95 px-3 py-2 backdrop-blur lg:hidden">
+        <Button className="h-12 w-full text-base" onClick={() => print(agreement)}>
+          <FileDown className="size-5" /> Export PDF
+        </Button>
+      </div>
     </main>
   );
 }
+
 
 
