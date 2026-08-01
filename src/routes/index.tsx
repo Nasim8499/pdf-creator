@@ -201,8 +201,8 @@ function AgreementEditorPage() {
         </section>
 
         <section className="print-root bg-muted/50">
-          <div className="lg:h-[calc(100vh-65px)] lg:overflow-auto">
-            <div className="p-6">
+          <div className="preview-scroll lg:h-[calc(100vh-65px)] lg:overflow-auto">
+            <div className="preview-pad p-6">
               <PreviewDocument agreement={shown} zoom={zoom} />
             </div>
           </div>

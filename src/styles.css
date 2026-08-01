@@ -199,6 +199,14 @@
     height: auto !important;
     gap: 0 !important;
   }
+  .preview-scroll {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+  .preview-pad {
+    padding: 0 !important;
+  }
   .doc-page {
     box-shadow: none !important;
     width: 793px !important;
