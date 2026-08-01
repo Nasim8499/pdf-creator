@@ -313,6 +313,8 @@ function buildBlocks(ctx: Ctx): Block[] {
   if (s.showCover) {
     blocks.push({
       id: "cover",
+      kind: "cover",
+      label: "Cover page",
       node: (
         <div className="flex flex-col justify-between" style={{ minHeight: 820 }}>
           <div>
@@ -396,7 +398,7 @@ function buildBlocks(ctx: Ctx): Block[] {
           </div>
 
           <div>
-            {s.showSponsorStrip ? <SponsorStrip {...ctx} /> : null}
+            {s.showSponsorStrip && s.sponsorLogo.onCover ? <SponsorStrip {...ctx} /> : null}
             <p
               className="pt-3 text-[11px] leading-relaxed"
               style={{ borderTop: `1px solid ${t.chromeRule}`, color: t.muted }}
@@ -414,6 +416,8 @@ function buildBlocks(ctx: Ctx): Block[] {
   if (s.showContents) {
     blocks.push({
       id: "toc",
+      kind: "toc",
+      label: "Contents",
       breakBefore: s.showCover,
       node: (
         <div>
@@ -446,6 +450,8 @@ function buildBlocks(ctx: Ctx): Block[] {
 
   blocks.push({
     id: "title",
+    kind: "title",
+    label: "Title block",
     breakBefore: s.showCover || s.showContents,
     node: (
       <div className="mb-6 pb-4" style={{ borderBottom: `2px solid ${t.ink}` }}>
@@ -466,6 +472,8 @@ function buildBlocks(ctx: Ctx): Block[] {
 
   blocks.push({
     id: "parties-bar",
+    kind: "band",
+    label: "Part A · Parties",
     keepWithNext: true,
     node: <SectionBar index="Part A" title="Parties to this agreement" t={t} gap={s.sectionSpacing} />,
   });
@@ -501,6 +509,8 @@ function buildBlocks(ctx: Ctx): Block[] {
 
   blocks.push({
     id: "terms-bar",
+    kind: "band",
+    label: "Part B · Terms",
     keepWithNext: true,
     breakBefore: brk,
     node: (
@@ -511,6 +521,8 @@ function buildBlocks(ctx: Ctx): Block[] {
   a.clauses.forEach((c, index) => {
     blocks.push({
       id: c.id,
+      kind: "clause",
+      label: c.heading,
       node: (
         <section style={{ marginBottom: s.clauseSpacing }}>
           <h2
@@ -537,6 +549,8 @@ function buildBlocks(ctx: Ctx): Block[] {
   if (a.consents.length) {
     blocks.push({
       id: "consents-head",
+      kind: "band",
+      label: "Part C · Consents",
       keepWithNext: true,
       breakBefore: brk,
       node: (
@@ -573,6 +587,8 @@ function buildBlocks(ctx: Ctx): Block[] {
   if (a.signatures.length) {
     blocks.push({
       id: "sign-head",
+      kind: "band",
+      label: "Part D · Signatures",
       keepWithNext: true,
       breakBefore: brk,
       node: <SectionBar index="Part D" title="Execution and signatures" t={t} gap={s.sectionSpacing} />,
@@ -586,6 +602,8 @@ function buildBlocks(ctx: Ctx): Block[] {
           : undefined;
       blocks.push({
         id: sig.id,
+        kind: "signature",
+        label: sig.role,
         node: (
           <div className="mb-4" style={{ border: `1px solid ${t.chromeRule}` }}>
             <div
@@ -622,8 +640,8 @@ function buildBlocks(ctx: Ctx): Block[] {
     if (s.codes.enabled && s.codes.inSignatures) {
       blocks.push({ id: "sign-code", node: <VerifyMark t={t} s={s} /> });
     }
-    if (s.showSponsorStrip && s.sponsors.length && s.showCover) {
-      blocks.push({ id: "sign-sponsors", node: <div className="mt-5"><SponsorStrip {...ctx} /></div> });
+    if (s.showSponsorStrip && s.sponsors.length && s.sponsorLogo.inSignatures) {
+      blocks.push({ id: "sign-sponsors", kind: "other", label: "Sponsors", node: <div className="mt-5"><SponsorStrip {...ctx} /></div> });
     }
   }
 
