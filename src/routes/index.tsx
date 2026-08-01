@@ -177,6 +177,8 @@ function AgreementEditorPage() {
   };
 
   const shown = printTarget ?? agreement;
+  const findings = useMemo(() => scanAgreement(agreement), [agreement]);
+
 
   const editorColumn = (
     <div className="space-y-8 p-4 sm:p-5">
