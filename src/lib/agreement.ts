@@ -249,6 +249,21 @@ export function formatDate(value: string) {
 
 type Stored = { current: Agreement; versions: Version[] };
 
+/** Fills in settings introduced after a document was saved. */
+export function withSettings(doc: Agreement): Agreement {
+  const s = (doc.settings ?? {}) as Partial<DocSettings>;
+  return {
+    ...doc,
+    settings: {
+      ...defaultSettings,
+      ...s,
+      logo: { ...defaultSettings.logo, ...(s.logo ?? {}) },
+      codes: { ...defaultSettings.codes, ...(s.codes ?? {}) },
+      sponsors: s.sponsors ?? [],
+    },
+  };
+}
+
 export function loadStored(): Stored | null {
   if (typeof window === "undefined") return null;
   try {
@@ -256,11 +271,15 @@ export function loadStored(): Stored | null {
     if (!raw) return null;
     const parsed = JSON.parse(raw) as Stored;
     if (!parsed?.current) return null;
-    return { current: parsed.current, versions: parsed.versions ?? [] };
+    return {
+      current: withSettings(parsed.current),
+      versions: (parsed.versions ?? []).map((v) => ({ ...v, data: withSettings(v.data) })),
+    };
   } catch {
     return null;
   }
 }
+
 
 export function saveStored(current: Agreement, versions: Version[]) {
   if (typeof window === "undefined") return;
