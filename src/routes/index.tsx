@@ -621,13 +621,27 @@ function AgreementEditorPage() {
 
       {/* Mobile action bar — one export button, current preview settings */}
       <div className="no-print sticky bottom-0 z-30 border-t border-border bg-background/95 px-3 py-2 backdrop-blur lg:hidden">
-        <Button className="h-12 w-full text-base" onClick={() => print(agreement)}>
+        <Button className="h-12 w-full text-base" onClick={() => setExportOpen(true)}>
           <FileDown className="size-5" /> Export PDF
         </Button>
       </div>
+
+      <ExportConfirmDialog
+        open={exportOpen}
+        onOpenChange={setExportOpen}
+        agreement={agreement}
+        findings={findings}
+        confirmed={confirmedRules}
+        onConfirm={() => {
+          confirmAllRules();
+          setExportOpen(false);
+          print(agreement, true);
+        }}
+      />
     </main>
   );
 }
+
 
 
 
