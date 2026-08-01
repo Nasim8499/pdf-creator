@@ -5,6 +5,8 @@ export type Draft = {
   id: string;
   label: string;
   savedAt: string;
+  /** Set when the user renames a draft — autosave then stops re-labelling it. */
+  renamed?: boolean;
   data: Agreement;
 };
 
@@ -38,17 +40,28 @@ export function persistDrafts(drafts: Draft[]) {
   }
 }
 
+/** Rename a draft and mark it so autosave keeps the custom name. */
+export function renameDraft(drafts: Draft[], id: string, label: string): Draft[] {
+  const name = label.trim();
+  if (!name) return drafts;
+  return drafts.map((d) => (d.id === id ? { ...d, label: name, renamed: true } : d));
+}
+
 /**
  * Autosave: one draft per party pairing. Re-saving the same pairing updates the
  * existing entry instead of filling the list with near-identical copies.
+ * Renamed drafts keep their custom label but still track the same pairing.
  */
 export function upsertAutoDraft(drafts: Draft[], a: Agreement): Draft[] {
   const label = draftLabel(a);
+  const existing = drafts.find((d) => d.label === label || d.autoKey === label);
   const entry: Draft = {
-    id: drafts.find((d) => d.label === label)?.id ?? `d-${Date.now().toString(36)}`,
-    label,
+    id: existing?.id ?? `d-${Date.now().toString(36)}`,
+    label: existing?.renamed ? existing.label : label,
+    autoKey: label,
     savedAt: new Date().toISOString(),
+    ...(existing?.renamed ? { renamed: true } : {}),
     data: clone(a),
   };
-  return [entry, ...drafts.filter((d) => d.label !== label)].slice(0, MAX_DRAFTS);
+  return [entry, ...drafts.filter((d) => d.id !== entry.id)].slice(0, MAX_DRAFTS);
 }
