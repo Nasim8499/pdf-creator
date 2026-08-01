@@ -45,10 +45,11 @@ export function ExportConfirmDialog({
   ].filter(Boolean) as string[];
 
   const excluded = [
-    ...mapping.excluded.map((e) => `Removed agency-issued item: ${e.label ?? e}`),
-    ...mapping.renamed.map((r) => `Relabelled as party-supplied: ${r.from ?? r}`),
+    ...mapping.excluded.map((e) => `Removed agency-issued item: ${e.label} — ${e.detail}`),
+    ...mapping.renamed.map((r) => `Relabelled as party-supplied: ${r.label}`),
     ...findings.map((f) => `Blocked ${f.label} in ${f.field}`),
   ];
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
