@@ -135,6 +135,16 @@ function AgreementEditorPage() {
   }, []);
 
   const print = (doc: Agreement, force = false) => {
+    const blocked = scanAgreement(doc);
+    if (blocked.length > 0) {
+      toast.error(
+        `Export blocked — ${blocked.length} government-issued field${blocked.length === 1 ? "" : "s"} found`,
+        {
+          description: `${blocked[0]?.label}: “${blocked[0]?.match}” in ${blocked[0]?.field}. Remove these before exporting.`,
+        },
+      );
+      return;
+    }
     if (!force && doc === agreement) {
       const errs = errorCount(report);
       if (errs > 0) {
@@ -151,6 +161,7 @@ function AgreementEditorPage() {
       setTimeout(() => setPrintTarget(null), 300);
     }, 250);
   };
+
 
   const saveVersion = () => {
     const label =
