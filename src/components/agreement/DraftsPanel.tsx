@@ -56,7 +56,9 @@ export function DraftsPanel({
             Draft version history
           </h3>
           <p className="truncate text-[11px] text-muted-foreground">
-            {savedAt ? `Last autosave ${when(savedAt)}` : "Autosaves as you type"}
+            {savedAt
+              ? `Last autosave ${when(savedAt)} · every draft downloads as a PDF`
+              : "Autosaves as you type · every draft downloads as a PDF"}
           </p>
         </div>
         <Button size="sm" variant="outline" className="h-10 shrink-0 sm:h-8" onClick={onSaveNow}>
@@ -133,13 +135,14 @@ export function DraftsPanel({
                       <FolderOpen className="size-4" />
                     </Button>
                     <Button
-                      size="icon"
-                      variant="ghost"
-                      aria-label={`Export draft ${d.label} to PDF`}
-                      className="size-10 sm:size-9"
+                      size="sm"
+                      variant="secondary"
+                      aria-label={`Download draft ${d.label} as a PDF`}
+                      className="h-10 shrink-0 gap-1.5 px-2.5 sm:h-9"
                       onClick={() => onExport(d)}
                     >
                       <FileDown className="size-4" />
+                      <span className="hidden text-xs sm:inline">PDF</span>
                     </Button>
                     <Button
                       size="icon"
