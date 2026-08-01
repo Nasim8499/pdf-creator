@@ -289,15 +289,16 @@ function buildBlocks(a: Agreement): Block[] {
               <Logo src={roleLogo} alt={`${s.role} logo`} h={18} />
             </div>
             <div className="p-4 pt-3">
-            <div className="grid grid-cols-2 gap-x-6 gap-y-1">
-              <Field label="Name" value={s.name} />
-              <Field label="Title" value={s.title} />
-              <Field label="Organisation" value={s.organisation} />
-              <Field label={s.dateLabel || "Date"} value={formatDate(s.dateValue)} />
-            </div>
-            <div className="mt-5 border-b border-neutral-400" />
-            <div className="mt-1 text-[10.5px] uppercase tracking-wide text-neutral-500">
-              {s.signatureLabel || "Signature"}
+              <div className="grid grid-cols-2 gap-x-6 gap-y-1">
+                <Field label="Name" value={s.name} />
+                <Field label="Title" value={s.title} />
+                <Field label="Organisation" value={s.organisation} />
+                <Field label={s.dateLabel || "Date"} value={formatDate(s.dateValue)} />
+              </div>
+              <div className="mt-5 border-b border-neutral-400" />
+              <div className="mt-1 text-[10.5px] uppercase tracking-wide text-neutral-500">
+                {s.signatureLabel || "Signature"}
+              </div>
             </div>
           </div>
         ),
