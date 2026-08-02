@@ -27,6 +27,12 @@ const CONTENT_W = A4.w - MX * 2;
 const TOP = A4.h - MY;
 const BOTTOM = MY + 18;
 
+/** Every export is normalised to this length. */
+const TARGET_PAGES = 20;
+/** Typographic densities tried, roomiest first, until the target length fits. */
+const DENSITIES = [1, 0.96, 0.92, 0.88, 0.84, 0.8, 0.76, 0.72];
+
+
 type Block =
   | { kind: "p"; text: string }
   | { kind: "li"; text: string }
