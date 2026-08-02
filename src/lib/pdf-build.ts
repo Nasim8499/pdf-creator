@@ -597,6 +597,28 @@ function writeBody(w: Writer) {
   }
 }
 
+/**
+ * Ruled continuation pages used to land the document on the target length.
+ * They are real, printable "notes and variations" pages, not blank filler.
+ */
+function writeNotesPages(w: Writer, count: number) {
+  for (let i = 0; i < count; i += 1) {
+    w.newPage();
+    w.band(count === 1 ? "Notes and agreed variations" : `Notes and agreed variations (${i + 1})`);
+    w.text(
+      "Use these ruled pages to record agreed variations, meeting notes or additional terms. Each entry should be dated and initialled by both parties.",
+      { size: 9, color: w.pal.muted, after: 10 },
+    );
+    let ry = w.y;
+    while (ry - 22 > BOTTOM) {
+      w.page.drawRectangle({ x: MX, y: ry - 4, width: CONTENT_W, height: 0.5, color: w.pal.rule });
+      ry -= 22;
+    }
+    w.y = BOTTOM;
+  }
+}
+
+
 /* ------------------------------------------------------------------ */
 /* Cover, contents, page numbers                                       */
 /* ------------------------------------------------------------------ */
