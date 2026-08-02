@@ -119,7 +119,7 @@ export function PdfPreviewDialog({ open, onOpenChange, agreement, label }: Props
 
           <section
             aria-labelledby="pdf-audit-heading"
-            className="flex h-[60vh] flex-col overflow-hidden rounded-md border border-border"
+            className="flex max-h-[42vh] flex-col overflow-hidden rounded-md border border-border md:h-[60vh] md:max-h-none"
           >
             <header className="border-b border-border bg-muted/40 px-3 py-2">
               <h3
