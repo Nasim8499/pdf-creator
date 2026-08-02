@@ -178,16 +178,21 @@ export function PdfPreviewDialog({ open, onOpenChange, agreement, label }: Props
             variant="outline"
             onClick={() => setNonce((n) => n + 1)}
             disabled={building}
-            className="sm:mr-auto"
+            className="h-11 w-full sm:mr-auto sm:h-9 sm:w-auto"
           >
             <RefreshCw className="size-4" aria-hidden="true" /> Rebuild &amp; re-audit
           </Button>
-          <div className="flex gap-2">
-            <Button variant="ghost" onClick={() => onOpenChange(false)}>
+          <div className="flex w-full gap-2 sm:w-auto">
+            <Button
+              variant="ghost"
+              className="h-11 flex-1 sm:h-9 sm:flex-none"
+              onClick={() => onOpenChange(false)}
+            >
               Keep editing
             </Button>
             <Button
               disabled={!url}
+              className="h-11 flex-1 sm:h-9 sm:flex-none"
               onClick={() => {
                 if (!url) return;
                 const a = document.createElement("a");
@@ -203,6 +208,7 @@ export function PdfPreviewDialog({ open, onOpenChange, agreement, label }: Props
             </Button>
           </div>
         </DialogFooter>
+
       </DialogContent>
     </Dialog>
   );
