@@ -29,8 +29,15 @@ const BOTTOM = MY + 18;
 
 /** Every export is normalised to this length. */
 const TARGET_PAGES = 20;
-/** Typographic densities tried, roomiest first, until the target length fits. */
-const DENSITIES = [1, 0.96, 0.92, 0.88, 0.84, 0.8, 0.76, 0.72];
+/**
+ * Typographic densities, roomiest first. A binary search picks the largest one
+ * whose layout still fits the target length, so short templates breathe and
+ * long ones tighten instead of overflowing.
+ */
+const DENSITIES = Array.from({ length: 24 }, (_, i) => +(1.68 - i * 0.04).toFixed(2));
+/** Ruled "notes" pages are only ever used to close a small remaining gap. */
+const MAX_NOTES_PAGES = 3;
+
 
 
 type Block =
