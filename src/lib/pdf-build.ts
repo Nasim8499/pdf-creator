@@ -338,14 +338,15 @@ class Writer {
         this.text(b.text, { after: 5 });
       } else {
         const marker = b.kind === "oli" ? `${b.index}.` : "-";
-        this.need(14);
+        this.need(14 * this.scale);
         this.page.drawText(marker, {
           x: MX + 12,
-          y: this.y - 9.6,
-          size: 9.6,
+          y: this.y - 9.6 * this.scale,
+          size: 9.6 * this.scale,
           font: this.fonts.serif,
           color: this.pal.accent,
         });
+
         this.text(b.text, { indent: 28, after: 4 });
       }
     }
