@@ -34,7 +34,7 @@ const TARGET_PAGES = 20;
  * whose layout still fits the target length, so short templates breathe and
  * long ones tighten instead of overflowing.
  */
-const DENSITIES = Array.from({ length: 24 }, (_, i) => +(1.68 - i * 0.04).toFixed(2));
+const DENSITIES = Array.from({ length: 14 }, (_, i) => +(1.24 - i * 0.04).toFixed(2));
 /** Ruled "notes" pages are only ever used to close a small remaining gap. */
 const MAX_NOTES_PAGES = 3;
 
