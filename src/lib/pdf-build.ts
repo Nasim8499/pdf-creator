@@ -820,25 +820,38 @@ export async function buildAgreementPdf(
     rule: hexToRgb(theme.chromeRule === "#111111" ? "#c9c9c9" : "#c8d3e2"),
   };
 
-  // Pass 1: probe the body at several densities and pick the tightest-fitting
-  // one that lands the whole document on TARGET_PAGES (cover + contents + body).
+  // Pass 1: binary-search the densities for the roomiest layout that still fits
+  // TARGET_PAGES (cover + contents + body).
   const perTocPage = Math.floor((TOP - 20 - BOTTOM) / 16);
-  let scale = 1;
-  let tocPages = 1;
-  let bodyPages = 0;
-  for (const s of DENSITIES) {
+  const measure = async (s: number) => {
     const probeDoc = await PDFDocument.create();
     const probeFonts = await loadFonts(probeDoc);
     const probe = new Writer(probeDoc, probeFonts, pal, agreement, 2, s);
     writeBody(probe);
-    scale = s;
-    tocPages = Math.max(1, Math.ceil(probe.toc.length / perTocPage));
-    bodyPages = probe.pages.length;
-    if (1 + tocPages + bodyPages <= TARGET_PAGES) break;
+    const toc = Math.max(1, Math.ceil(probe.toc.length / perTocPage));
+    return { scale: s, tocPages: toc, bodyPages: probe.pages.length, total: 1 + toc + probe.pages.length };
+  };
+
+  let lo = 0;
+  let hi = DENSITIES.length - 1;
+  let best = await measure(DENSITIES[hi]!);
+  while (lo <= hi) {
+    const mid = (lo + hi) >> 1;
+    const m = await measure(DENSITIES[mid]!);
+    if (m.total <= TARGET_PAGES) {
+      best = m;
+      hi = mid - 1;
+    } else {
+      lo = mid + 1;
+    }
   }
-  // Short documents get ruled "notes and variations" pages so every export is
-  // the same predictable length.
-  const notesPages = Math.max(0, TARGET_PAGES - (1 + tocPages + bodyPages));
+  const { scale, tocPages, bodyPages } = best;
+  // Any small remaining gap is closed with ruled notes pages.
+  const notesPages = Math.min(
+    MAX_NOTES_PAGES,
+    Math.max(0, TARGET_PAGES - (1 + tocPages + bodyPages)),
+  );
+
 
   // Pass 2: real document with the correct page offset.
   const doc = await PDFDocument.create();
