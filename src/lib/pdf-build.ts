@@ -237,7 +237,7 @@ class Writer {
   }
 
   space(h: number) {
-    this.y -= h;
+    this.y -= h * this.scale;
   }
 
   need(h: number) {
@@ -257,8 +257,8 @@ class Writer {
     } = {},
   ) {
     const font = opts.font ?? this.fonts.serif;
-    const size = opts.size ?? 9.6;
-    const lead = opts.lead ?? size * 1.5;
+    const size = +((opts.size ?? 9.6) * this.scale).toFixed(2);
+    const lead = +((opts.lead ?? (opts.size ?? 9.6) * 1.5) * this.scale).toFixed(2);
     const indent = opts.indent ?? 0;
     const width = opts.width ?? CONTENT_W - indent;
     for (const line of wrap(value, font, size, width)) {
@@ -272,8 +272,9 @@ class Writer {
       });
       this.y -= lead;
     }
-    if (opts.after) this.y -= opts.after;
+    if (opts.after) this.y -= opts.after * this.scale;
   }
+
 
   rule(color?: RGB, width = CONTENT_W) {
     this.need(8);
