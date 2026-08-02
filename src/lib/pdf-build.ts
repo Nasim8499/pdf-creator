@@ -163,13 +163,23 @@ class Writer {
   /** Every heading with its level, used by the accessibility audit. */
   outline: Array<{ level: 1 | 2; label: string; page: number }> = [];
   offset: number;
+  /** Typographic density: 1 = roomy, <1 tightens type to fit the page target. */
+  scale: number;
 
-  constructor(doc: PDFDocument, fonts: Fonts, pal: Palette, agreement: Agreement, offset: number) {
+  constructor(
+    doc: PDFDocument,
+    fonts: Fonts,
+    pal: Palette,
+    agreement: Agreement,
+    offset: number,
+    scale = 1,
+  ) {
     this.doc = doc;
     this.fonts = fonts;
     this.pal = pal;
     this.agreement = agreement;
     this.offset = offset;
+    this.scale = scale;
     this.newPage();
   }
 
@@ -183,6 +193,7 @@ class Writer {
     this.chrome();
     this.y = TOP - 26;
   }
+
 
   private chrome() {
     const { agreement: a, fonts, pal } = this;
