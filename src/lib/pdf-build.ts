@@ -35,8 +35,6 @@ const TARGET_PAGES = 20;
  * long ones tighten instead of overflowing.
  */
 const DENSITIES = Array.from({ length: 20 }, (_, i) => +(1.48 - i * 0.04).toFixed(2));
-/** Ruled "notes" pages are only ever used to close a small remaining gap. */
-const MAX_NOTES_PAGES = 4;
 
 
 
@@ -897,10 +895,7 @@ export async function buildAgreementPdf(
   }
   const { scale, tocPages, bodyPages } = best;
   // Any small remaining gap is closed with ruled notes pages.
-  const notesPages = Math.min(
-    MAX_NOTES_PAGES,
-    Math.max(0, TARGET_PAGES - (1 + tocPages + bodyPages)),
-  );
+  const notesPages = Math.max(0, TARGET_PAGES - (1 + tocPages + bodyPages));
 
 
   // Pass 2: real document with the correct page offset.
