@@ -807,13 +807,25 @@ export async function buildAgreementPdf(
     rule: hexToRgb(theme.chromeRule === "#111111" ? "#c9c9c9" : "#c8d3e2"),
   };
 
-  // Pass 1: lay the body out to learn how many contents pages are needed.
-  const probeDoc = await PDFDocument.create();
-  const probeFonts = await loadFonts(probeDoc);
-  const probe = new Writer(probeDoc, probeFonts, pal, agreement, 2);
-  writeBody(probe);
+  // Pass 1: probe the body at several densities and pick the tightest-fitting
+  // one that lands the whole document on TARGET_PAGES (cover + contents + body).
   const perTocPage = Math.floor((TOP - 20 - BOTTOM) / 16);
-  const tocPages = Math.max(1, Math.ceil(probe.toc.length / perTocPage));
+  let scale = 1;
+  let tocPages = 1;
+  let bodyPages = 0;
+  for (const s of DENSITIES) {
+    const probeDoc = await PDFDocument.create();
+    const probeFonts = await loadFonts(probeDoc);
+    const probe = new Writer(probeDoc, probeFonts, pal, agreement, 2, s);
+    writeBody(probe);
+    scale = s;
+    tocPages = Math.max(1, Math.ceil(probe.toc.length / perTocPage));
+    bodyPages = probe.pages.length;
+    if (1 + tocPages + bodyPages <= TARGET_PAGES) break;
+  }
+  // Short documents get ruled "notes and variations" pages so every export is
+  // the same predictable length.
+  const notesPages = Math.max(0, TARGET_PAGES - (1 + tocPages + bodyPages));
 
   // Pass 2: real document with the correct page offset.
   const doc = await PDFDocument.create();
@@ -838,9 +850,11 @@ export async function buildAgreementPdf(
   const contents: PDFPage[] = [];
   for (let i = 0; i < tocPages; i += 1) contents.push(doc.addPage([A4.w, A4.h]));
 
-  const writer = new Writer(doc, fonts, pal, agreement, 1 + tocPages);
+  const writer = new Writer(doc, fonts, pal, agreement, 1 + tocPages, scale);
   writeBody(writer);
+  if (notesPages > 0) writeNotesPages(writer, notesPages);
   drawContents(contents, writer.toc, fonts, pal);
+
 
   // Page numbers on every page after the cover.
   const all = doc.getPages();
