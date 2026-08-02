@@ -27,6 +27,17 @@ const CONTENT_W = A4.w - MX * 2;
 const TOP = A4.h - MY;
 const BOTTOM = MY + 18;
 
+/** Every export is normalised to this length. */
+const TARGET_PAGES = 20;
+/**
+ * Typographic densities, roomiest first. A binary search picks the largest one
+ * whose layout still fits the target length, so short templates breathe and
+ * long ones tighten instead of overflowing.
+ */
+const DENSITIES = Array.from({ length: 20 }, (_, i) => +(1.48 - i * 0.04).toFixed(2));
+
+
+
 type Block =
   | { kind: "p"; text: string }
   | { kind: "li"; text: string }
@@ -163,13 +174,23 @@ class Writer {
   /** Every heading with its level, used by the accessibility audit. */
   outline: Array<{ level: 1 | 2; label: string; page: number }> = [];
   offset: number;
+  /** Typographic density: 1 = roomy, <1 tightens type to fit the page target. */
+  scale: number;
 
-  constructor(doc: PDFDocument, fonts: Fonts, pal: Palette, agreement: Agreement, offset: number) {
+  constructor(
+    doc: PDFDocument,
+    fonts: Fonts,
+    pal: Palette,
+    agreement: Agreement,
+    offset: number,
+    scale = 1,
+  ) {
     this.doc = doc;
     this.fonts = fonts;
     this.pal = pal;
     this.agreement = agreement;
     this.offset = offset;
+    this.scale = scale;
     this.newPage();
   }
 
@@ -183,6 +204,7 @@ class Writer {
     this.chrome();
     this.y = TOP - 26;
   }
+
 
   private chrome() {
     const { agreement: a, fonts, pal } = this;
@@ -226,7 +248,7 @@ class Writer {
   }
 
   space(h: number) {
-    this.y -= h;
+    this.y -= h * this.scale;
   }
 
   need(h: number) {
@@ -246,8 +268,8 @@ class Writer {
     } = {},
   ) {
     const font = opts.font ?? this.fonts.serif;
-    const size = opts.size ?? 9.6;
-    const lead = opts.lead ?? size * 1.5;
+    const size = +((opts.size ?? 9.6) * this.scale).toFixed(2);
+    const lead = +((opts.lead ?? (opts.size ?? 9.6) * 1.5) * this.scale).toFixed(2);
     const indent = opts.indent ?? 0;
     const width = opts.width ?? CONTENT_W - indent;
     for (const line of wrap(value, font, size, width)) {
@@ -261,8 +283,9 @@ class Writer {
       });
       this.y -= lead;
     }
-    if (opts.after) this.y -= opts.after;
+    if (opts.after) this.y -= opts.after * this.scale;
   }
+
 
   rule(color?: RGB, width = CONTENT_W) {
     this.need(8);
@@ -326,14 +349,15 @@ class Writer {
         this.text(b.text, { after: 5 });
       } else {
         const marker = b.kind === "oli" ? `${b.index}.` : "-";
-        this.need(14);
+        this.need(14 * this.scale);
         this.page.drawText(marker, {
           x: MX + 12,
-          y: this.y - 9.6,
-          size: 9.6,
+          y: this.y - 9.6 * this.scale,
+          size: 9.6 * this.scale,
           font: this.fonts.serif,
           color: this.pal.accent,
         });
+
         this.text(b.text, { indent: 28, after: 4 });
       }
     }
@@ -584,6 +608,78 @@ function writeBody(w: Writer) {
   }
 }
 
+/**
+ * Ruled continuation pages used to land the document on the target length.
+ * They are real, printable "notes and variations" pages, not blank filler.
+ */
+function writeNotesPages(w: Writer, count: number) {
+  const kinds = [
+    {
+      title: "Annex - Record of agreed variations",
+      intro:
+        "Any change to this agreement must be recorded here, dated and initialled by both parties before it takes effect.",
+      columns: ["Date", "Variation agreed", "Employer", "Employee"] as string[],
+    },
+    {
+      title: "Annex - Meeting and review notes",
+      intro:
+        "Use this page to record performance reviews, wellbeing check-ins or any discussion the parties wish to keep on file.",
+      columns: null,
+    },
+    {
+      title: "Annex - Correspondence log",
+      intro:
+        "Record letters, notices and formal emails exchanged under this agreement so both parties keep the same record.",
+      columns: ["Date", "Sent by", "Subject", "Response"] as string[],
+    },
+  ];
+
+  for (let i = 0; i < count; i += 1) {
+    const kind = kinds[i % kinds.length]!;
+    const round = Math.floor(i / kinds.length);
+    w.newPage();
+    w.band(round === 0 ? kind.title : `${kind.title} (${round + 1})`);
+    w.text(kind.intro, { size: 9, color: w.pal.muted, after: 10 });
+
+    if (kind.columns) {
+      const colW = [70, CONTENT_W - 70 - 100, 50, 50];
+      let cx = MX;
+      w.page.drawRectangle({ x: MX, y: w.y - 16, width: CONTENT_W, height: 16, color: w.pal.surface });
+      kind.columns.forEach((c, ci) => {
+        w.page.drawText(ascii(c).toUpperCase(), {
+          x: cx + 6,
+          y: w.y - 11,
+          size: 7,
+          font: w.fonts.sansBold,
+          color: w.pal.accent,
+        });
+        cx += colW[ci]!;
+      });
+      let ry = w.y - 16;
+      while (ry - 26 > BOTTOM) {
+        w.page.drawRectangle({ x: MX, y: ry, width: CONTENT_W, height: 0.5, color: w.pal.rule });
+        let vx = MX;
+        for (const cw of colW) {
+          w.page.drawRectangle({ x: vx, y: ry - 26, width: 0.5, height: 26, color: w.pal.rule });
+          vx += cw;
+        }
+        w.page.drawRectangle({ x: MX + CONTENT_W, y: ry - 26, width: 0.5, height: 26, color: w.pal.rule });
+        ry -= 26;
+      }
+      w.page.drawRectangle({ x: MX, y: ry, width: CONTENT_W, height: 0.5, color: w.pal.rule });
+    } else {
+      let ry = w.y;
+      while (ry - 22 > BOTTOM) {
+        w.page.drawRectangle({ x: MX, y: ry - 4, width: CONTENT_W, height: 0.5, color: w.pal.rule });
+        ry -= 22;
+      }
+    }
+    w.y = BOTTOM;
+  }
+}
+
+
+
 /* ------------------------------------------------------------------ */
 /* Cover, contents, page numbers                                       */
 /* ------------------------------------------------------------------ */
@@ -772,13 +868,35 @@ export async function buildAgreementPdf(
     rule: hexToRgb(theme.chromeRule === "#111111" ? "#c9c9c9" : "#c8d3e2"),
   };
 
-  // Pass 1: lay the body out to learn how many contents pages are needed.
-  const probeDoc = await PDFDocument.create();
-  const probeFonts = await loadFonts(probeDoc);
-  const probe = new Writer(probeDoc, probeFonts, pal, agreement, 2);
-  writeBody(probe);
+  // Pass 1: binary-search the densities for the roomiest layout that still fits
+  // TARGET_PAGES (cover + contents + body).
   const perTocPage = Math.floor((TOP - 20 - BOTTOM) / 16);
-  const tocPages = Math.max(1, Math.ceil(probe.toc.length / perTocPage));
+  const measure = async (s: number) => {
+    const probeDoc = await PDFDocument.create();
+    const probeFonts = await loadFonts(probeDoc);
+    const probe = new Writer(probeDoc, probeFonts, pal, agreement, 2, s);
+    writeBody(probe);
+    const toc = Math.max(1, Math.ceil(probe.toc.length / perTocPage));
+    return { scale: s, tocPages: toc, bodyPages: probe.pages.length, total: 1 + toc + probe.pages.length };
+  };
+
+  let lo = 0;
+  let hi = DENSITIES.length - 1;
+  let best = await measure(DENSITIES[hi]!);
+  while (lo <= hi) {
+    const mid = (lo + hi) >> 1;
+    const m = await measure(DENSITIES[mid]!);
+    if (m.total <= TARGET_PAGES) {
+      best = m;
+      hi = mid - 1;
+    } else {
+      lo = mid + 1;
+    }
+  }
+  const { scale, tocPages, bodyPages } = best;
+  // Any small remaining gap is closed with ruled notes pages.
+  const notesPages = Math.max(0, TARGET_PAGES - (1 + tocPages + bodyPages));
+
 
   // Pass 2: real document with the correct page offset.
   const doc = await PDFDocument.create();
@@ -803,9 +921,11 @@ export async function buildAgreementPdf(
   const contents: PDFPage[] = [];
   for (let i = 0; i < tocPages; i += 1) contents.push(doc.addPage([A4.w, A4.h]));
 
-  const writer = new Writer(doc, fonts, pal, agreement, 1 + tocPages);
+  const writer = new Writer(doc, fonts, pal, agreement, 1 + tocPages, scale);
   writeBody(writer);
+  if (notesPages > 0) writeNotesPages(writer, notesPages);
   drawContents(contents, writer.toc, fonts, pal);
+
 
   // Page numbers on every page after the cover.
   const all = doc.getPages();
