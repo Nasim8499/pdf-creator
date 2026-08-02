@@ -615,21 +615,71 @@ function writeBody(w: Writer) {
  * They are real, printable "notes and variations" pages, not blank filler.
  */
 function writeNotesPages(w: Writer, count: number) {
+  const kinds = [
+    {
+      title: "Annex - Record of agreed variations",
+      intro:
+        "Any change to this agreement must be recorded here, dated and initialled by both parties before it takes effect.",
+      columns: ["Date", "Variation agreed", "Employer", "Employee"] as string[],
+    },
+    {
+      title: "Annex - Meeting and review notes",
+      intro:
+        "Use this page to record performance reviews, wellbeing check-ins or any discussion the parties wish to keep on file.",
+      columns: null,
+    },
+    {
+      title: "Annex - Correspondence log",
+      intro:
+        "Record letters, notices and formal emails exchanged under this agreement so both parties keep the same record.",
+      columns: ["Date", "Sent by", "Subject", "Response"] as string[],
+    },
+  ];
+
   for (let i = 0; i < count; i += 1) {
+    const kind = kinds[i % kinds.length]!;
+    const round = Math.floor(i / kinds.length);
     w.newPage();
-    w.band(count === 1 ? "Notes and agreed variations" : `Notes and agreed variations (${i + 1})`);
-    w.text(
-      "Use these ruled pages to record agreed variations, meeting notes or additional terms. Each entry should be dated and initialled by both parties.",
-      { size: 9, color: w.pal.muted, after: 10 },
-    );
-    let ry = w.y;
-    while (ry - 22 > BOTTOM) {
-      w.page.drawRectangle({ x: MX, y: ry - 4, width: CONTENT_W, height: 0.5, color: w.pal.rule });
-      ry -= 22;
+    w.band(round === 0 ? kind.title : `${kind.title} (${round + 1})`);
+    w.text(kind.intro, { size: 9, color: w.pal.muted, after: 10 });
+
+    if (kind.columns) {
+      const colW = [70, CONTENT_W - 70 - 100, 50, 50];
+      let cx = MX;
+      w.page.drawRectangle({ x: MX, y: w.y - 16, width: CONTENT_W, height: 16, color: w.pal.surface });
+      kind.columns.forEach((c, ci) => {
+        w.page.drawText(ascii(c).toUpperCase(), {
+          x: cx + 6,
+          y: w.y - 11,
+          size: 7,
+          font: w.fonts.sansBold,
+          color: w.pal.accent,
+        });
+        cx += colW[ci]!;
+      });
+      let ry = w.y - 16;
+      while (ry - 26 > BOTTOM) {
+        w.page.drawRectangle({ x: MX, y: ry, width: CONTENT_W, height: 0.5, color: w.pal.rule });
+        let vx = MX;
+        for (const cw of colW) {
+          w.page.drawRectangle({ x: vx, y: ry - 26, width: 0.5, height: 26, color: w.pal.rule });
+          vx += cw;
+        }
+        w.page.drawRectangle({ x: MX + CONTENT_W, y: ry - 26, width: 0.5, height: 26, color: w.pal.rule });
+        ry -= 26;
+      }
+      w.page.drawRectangle({ x: MX, y: ry, width: CONTENT_W, height: 0.5, color: w.pal.rule });
+    } else {
+      let ry = w.y;
+      while (ry - 22 > BOTTOM) {
+        w.page.drawRectangle({ x: MX, y: ry - 4, width: CONTENT_W, height: 0.5, color: w.pal.rule });
+        ry -= 22;
+      }
     }
     w.y = BOTTOM;
   }
 }
+
 
 
 /* ------------------------------------------------------------------ */
