@@ -85,17 +85,18 @@ export function PdfPreviewDialog({ open, onOpenChange, agreement, label }: Props
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl">
-        <DialogHeader>
-          <DialogTitle>Check the PDF before downloading</DialogTitle>
-          <DialogDescription>
+      <DialogContent className="flex max-h-[92dvh] w-[calc(100vw-1.5rem)] max-w-5xl flex-col overflow-y-auto sm:w-full">
+        <DialogHeader className="text-left">
+          <DialogTitle className="text-base sm:text-lg">Check the PDF before downloading</DialogTitle>
+          <DialogDescription className="text-xs sm:text-sm">
             This is the exact file that will be saved. Scroll through the pages and review the
             accessibility audit{pages ? ` — ${pages} pages` : ""}.
           </DialogDescription>
         </DialogHeader>
 
         <div className="grid gap-4 md:grid-cols-[1.6fr_1fr]">
-          <div className="h-[60vh] overflow-hidden rounded-md border border-border bg-muted/40">
+          <div className="h-[45vh] overflow-hidden rounded-md border border-border bg-muted/40 md:h-[60vh]">
+
             {building ? (
               <div
                 role="status"
