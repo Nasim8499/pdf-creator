@@ -26,9 +26,8 @@ import { FieldInput } from "@/components/visa/FieldInput";
 import { PdfPreviewSheet } from "@/components/visa/PdfPreviewSheet";
 
 export const Route = createFileRoute("/apply/$code")({
-  validateSearch: (s: Record<string, unknown>) => ({
-    draft: typeof s["draft"] === "string" ? s["draft"] : undefined,
-  }),
+  validateSearch: (s: Record<string, unknown>): { draft?: string } =>
+    typeof s["draft"] === "string" ? { draft: s["draft"] } : {},
   loader: ({ params }) => {
     const country = getCountry(params.code);
     if (!country) throw notFound();

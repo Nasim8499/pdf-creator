@@ -252,10 +252,11 @@ export async function buildVisaPdf(
   }
   y -= 26;
   const half = (CONTENT_W - 24) / 2;
-  [
-    ["Signature", ""],
-    ["Date", String(values["signDate"] || "")],
-  ].forEach(([label, val], i) => {
+  const sigCols: { label: string; val: string }[] = [
+    { label: "Signature", val: "" },
+    { label: "Date", val: String(values["signDate"] || "") },
+  ];
+  sigCols.forEach(({ label, val }, i) => {
     const x = MX + i * (half + 24);
     page.drawLine({ start: { x, y }, end: { x: x + half, y }, thickness: 0.8, color: soft });
     page.drawText(label, { x, y: y - 12, size: 8, font: bold, color: soft });
